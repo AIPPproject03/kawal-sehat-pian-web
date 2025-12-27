@@ -1,6 +1,6 @@
 /* filepath: src/js/toast.js */
 /* eslint-disable no-unused-vars */
-// Professional Toast Notification System (FIXED)
+// Minimalist Professional Toast Notification System
 
 class ToastManager {
   constructor() {
@@ -21,8 +21,8 @@ class ToastManager {
     this.container = container;
   }
 
-  show(message, type = "info", duration = 4000, title = null) {
-    // Queue if too many
+  show(message, type = "info", duration = 3500, title = null) {
+    // Queue management
     if (this.activeToasts.length >= this.maxToasts) {
       this.queue.push({ message, type, duration, title });
       return;
@@ -34,9 +34,7 @@ class ToastManager {
 
     // Trigger show animation
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        toast.classList.add("show");
-      });
+      toast.classList.add("show");
     });
 
     // Auto dismiss
@@ -51,20 +49,23 @@ class ToastManager {
     const toast = document.createElement("div");
     toast.className = `toast-notification ${type}`;
 
+    // Minimalist icons
     const icons = {
       success: "✓",
       error: "✕",
-      warning: "⚠",
-      info: "ℹ",
+      warning: "!",
+      info: "i",
     };
 
+    // Default titles
     const titles = {
       success: title || "Berhasil",
       error: title || "Error",
-      warning: title || "Peringatan",
+      warning: title || "Perhatian",
       info: title || "Info",
     };
 
+    // Build HTML
     toast.innerHTML = `
       <div class="toast-icon">${icons[type]}</div>
       <div class="toast-content">
@@ -72,9 +73,10 @@ class ToastManager {
         <div class="toast-message">${this.escapeHtml(message)}</div>
       </div>
       <button class="toast-close" aria-label="Close">×</button>
-      <div class="toast-progress" style="animation-duration: ${duration}ms;"></div>
+      <div class="toast-progress" style="animation: toastProgress ${duration}ms linear"></div>
     `;
 
+    // Close button handler
     const closeBtn = toast.querySelector(".toast-close");
     closeBtn.addEventListener("click", () => {
       this.dismiss(toast);
@@ -84,18 +86,22 @@ class ToastManager {
   }
 
   dismiss(toast) {
+    // Clear timeout
     if (toast.dataset.timeoutId) {
       clearTimeout(parseInt(toast.dataset.timeoutId));
     }
 
+    // Hide animation
     toast.classList.add("hide");
     toast.classList.remove("show");
 
+    // Remove from active list
     const index = this.activeToasts.indexOf(toast);
     if (index > -1) {
       this.activeToasts.splice(index, 1);
     }
 
+    // Remove from DOM
     setTimeout(() => {
       if (toast.parentNode) {
         toast.parentNode.removeChild(toast);
@@ -106,7 +112,7 @@ class ToastManager {
         const next = this.queue.shift();
         this.show(next.message, next.type, next.duration, next.title);
       }
-    }, 400);
+    }, 300);
   }
 
   dismissAll() {
@@ -116,22 +122,24 @@ class ToastManager {
     this.queue = [];
   }
 
+  // Shorthand methods
   success(message, title) {
-    this.show(message, "success", 3500, title);
+    this.show(message, "success", 3000, title);
   }
 
   error(message, title) {
-    this.show(message, "error", 5000, title);
+    this.show(message, "error", 4500, title);
   }
 
   warning(message, title) {
-    this.show(message, "warning", 4500, title);
+    this.show(message, "warning", 4000, title);
   }
 
   info(message, title) {
-    this.show(message, "info", 3500, title);
+    this.show(message, "info", 3000, title);
   }
 
+  // HTML escape utility
   escapeHtml(text) {
     const div = document.createElement("div");
     div.textContent = text;
@@ -139,9 +147,10 @@ class ToastManager {
   }
 }
 
-// Export singleton
+// Create singleton instance
 const toast = new ToastManager();
 
+// Export for modules
 export default toast;
 
 // Global access
