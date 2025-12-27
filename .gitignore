@@ -27,3 +27,9 @@ build/
 # Temporary files
 tmp/
 temp/
+
+# Others
+SETUP.md
+QUICKSTART.md
+CHANGES.md
+netlify.toml
