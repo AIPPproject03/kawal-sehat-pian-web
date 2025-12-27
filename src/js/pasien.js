@@ -14,6 +14,7 @@ import {
   doc,
   setDoc,
   getDoc,
+  getDocs,
   addDoc,
   updateDoc,
   query,
@@ -64,29 +65,50 @@ const userNameDisplay = document.getElementById("user-name-display");
 function showLoading() {
   if (loadingOverlay) {
     loadingOverlay.style.display = "flex";
+    document.body.classList.add("loading");
+
+    setTimeout(() => {
+      if (loadingOverlay.style.display === "flex") {
+        console.warn("Loading timeout - auto-hiding");
+        hideLoading();
+      }
+    }, 10000);
   }
 }
 
 function hideLoading() {
   if (loadingOverlay) {
     loadingOverlay.style.display = "none";
+    document.body.classList.remove("loading");
   }
 }
 
 function showSection(sectionName) {
+  console.log("Showing section:", sectionName);
   Object.values(sections).forEach((section) => {
-    if (section) section.classList.remove("active");
+    if (section) {
+      section.classList.remove("active");
+      section.style.display = "none";
+    }
   });
   if (sections[sectionName]) {
     sections[sectionName].classList.add("active");
+    sections[sectionName].style.display = "block";
   }
 }
 
 function showNotification(message, type = "info", title = null) {
-  toast.show(message, type, 4000, title);
+  if (window.toast) {
+    toast.show(message, type, 4000, title);
+  } else {
+    console.log(`${type}: ${message}`);
+  }
 }
 
-// Modal Payment Logic
+// ========================================
+// MODAL PAYMENT LOGIC
+// ========================================
+
 let selectedService = null;
 let selectedPrice = 0;
 
@@ -134,20 +156,26 @@ const closeModalBtn = document.getElementById("close-payment-modal");
 if (closeModalBtn) {
   closeModalBtn.addEventListener("click", () => {
     document.getElementById("payment-modal").classList.remove("active");
+    document
+      .querySelectorAll(".service-card-mobile")
+      .forEach((c) => c.classList.remove("selected"));
   });
 }
 
-// Payment Tab Switching
+// Payment Method Tabs
 document.querySelectorAll(".payment-tab").forEach((tab) => {
   tab.addEventListener("click", function () {
     document
       .querySelectorAll(".payment-tab")
       .forEach((t) => t.classList.remove("active"));
     this.classList.add("active");
-    showPaymentContent(this.dataset.method);
+
+    const method = this.dataset.method;
+    showPaymentContent(method);
   });
 });
 
+// Show Payment Content
 function showPaymentContent(method) {
   document
     .querySelectorAll(".payment-content")
@@ -160,6 +188,7 @@ function showPaymentContent(method) {
   }
 }
 
+// Payment Step Navigation
 function showPaymentStep(step) {
   document
     .querySelectorAll(".payment-step")
@@ -167,7 +196,7 @@ function showPaymentStep(step) {
   document.getElementById(`payment-step-${step}`).classList.add("active");
 }
 
-// Confirm Payment Buttons
+// Confirm QRIS Payment
 const confirmQrisBtn = document.getElementById("confirm-qris-payment");
 if (confirmQrisBtn) {
   confirmQrisBtn.addEventListener("click", () => {
@@ -175,6 +204,7 @@ if (confirmQrisBtn) {
   });
 }
 
+// Confirm Transfer Payment
 const confirmTransferBtn = document.getElementById("confirm-transfer-payment");
 if (confirmTransferBtn) {
   confirmTransferBtn.addEventListener("click", () => {
@@ -182,6 +212,7 @@ if (confirmTransferBtn) {
   });
 }
 
+// Back to Payment
 const backToPaymentBtn = document.getElementById("back-to-payment");
 if (backToPaymentBtn) {
   backToPaymentBtn.addEventListener("click", () => {
@@ -238,11 +269,11 @@ if (removePreviewBtn) {
   removePreviewBtn.addEventListener("click", () => {
     const previewContainer = document.getElementById("preview-container");
     const uploadLabel = document.querySelector(".file-upload-label");
-    const fileInput = document.getElementById("payment-proof");
+    const paymentProof = document.getElementById("payment-proof");
 
     previewContainer.style.display = "none";
     uploadLabel.style.display = "flex";
-    fileInput.value = "";
+    paymentProof.value = "";
   });
 }
 
@@ -273,6 +304,7 @@ if (uploadProofForm) {
       await addDoc(collection(db, "consultations"), {
         patientId: currentUser.uid,
         patientName: currentUserData.name || "Pasien",
+        patientEmail: currentUserData.email || "",
         serviceType: selectedService,
         price: selectedPrice,
         status: "pending",
@@ -282,8 +314,9 @@ if (uploadProofForm) {
       });
 
       showNotification(
-        "Permintaan konsultasi berhasil diajukan! Menunggu persetujuan admin.",
-        "success"
+        "✓ Permintaan konsultasi berhasil diajukan! Menunggu persetujuan bidan.",
+        "success",
+        "Berhasil"
       );
 
       document.getElementById("payment-modal").classList.remove("active");
@@ -308,14 +341,18 @@ if (uploadProofForm) {
   });
 }
 
-// Load Patient Dashboard
+// ========================================
+// PATIENT DASHBOARD FUNCTIONS
+// ========================================
+
+// Load Patient Dashboard - ENHANCED WITH REAL-TIME
 async function loadPatientDashboard() {
   const consultationsList = document.getElementById(
     "pasien-consultations-list"
   );
   if (!consultationsList) return;
 
-  consultationsList.innerHTML = "<p>Memuat...</p>";
+  consultationsList.innerHTML = '<p class="empty-state">Memuat...</p>';
 
   try {
     const q = query(
@@ -324,102 +361,224 @@ async function loadPatientDashboard() {
       orderBy("createdAt", "desc")
     );
 
-    onSnapshot(q, (snapshot) => {
-      if (snapshot.empty) {
-        consultationsList.innerHTML =
-          '<p class="empty-state">Belum ada konsultasi</p>';
-        return;
+    // Real-time listener
+    onSnapshot(
+      q,
+      (snapshot) => {
+        if (snapshot.empty) {
+          consultationsList.innerHTML =
+            '<p class="empty-state">Belum ada konsultasi. Pilih layanan di atas untuk memulai!</p>';
+          return;
+        }
+
+        consultationsList.innerHTML = "";
+
+        snapshot.forEach((doc) => {
+          const consultation = doc.data();
+          const consultationCard = createConsultationCard(
+            doc.id,
+            consultation,
+            "patient"
+          );
+          consultationsList.appendChild(consultationCard);
+        });
+
+        // Check for newly approved consultations
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === "modified") {
+            const consultation = change.doc.data();
+            if (consultation.status === "active") {
+              showNotification(
+                "✅ Konsultasi Anda telah disetujui! Klik 'Buka Chat' untuk memulai.",
+                "success",
+                "Konsultasi Disetujui"
+              );
+            }
+          }
+        });
+      },
+      (error) => {
+        console.error("Load consultations error:", error);
+        consultationsList.innerHTML = '<p class="error">Gagal memuat data</p>';
       }
-
-      consultationsList.innerHTML = "";
-
-      snapshot.forEach((doc) => {
-        const consultation = doc.data();
-        const consultationCard = createConsultationCard(
-          doc.id,
-          consultation,
-          "patient"
-        );
-        consultationsList.appendChild(consultationCard);
-      });
-    });
+    );
   } catch (error) {
     console.error("Load consultations error:", error);
     consultationsList.innerHTML = '<p class="error">Gagal memuat data</p>';
   }
 }
 
-// Create Consultation Card
+// Create Consultation Card - ENHANCED
 function createConsultationCard(id, consultation, userType) {
   const card = document.createElement("div");
   card.className = "consultation-card";
+  card.style.animation = "fadeInScale 0.4s ease";
 
   const statusBadge = {
-    pending: "⏳ Menunggu",
-    active: "✅ Aktif",
+    pending: "⏳ Menunggu Persetujuan",
+    active: "✅ Aktif - Siap Konsultasi",
     finished: "✔️ Selesai",
+    rejected: "❌ Ditolak",
   }[consultation.status];
 
   const serviceLabel =
     consultation.serviceType === "chat" ? "💬 Chat" : "📞 Telepon";
 
+  const dateFormatted = consultation.createdAt
+    ? new Date(consultation.createdAt.toDate()).toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "Baru saja";
+
   card.innerHTML = `
     <div class="consultation-header">
-      <h4>${consultation.patientName}</h4>
+      <h4>${serviceLabel} Konsultasi</h4>
       <span class="status-badge status-${
         consultation.status
       }">${statusBadge}</span>
     </div>
-    <p><strong>Layanan:</strong> ${serviceLabel}</p>
-    <p><strong>Harga:</strong> Rp ${consultation.price.toLocaleString(
-      "id-ID"
-    )}</p>
-    <p><strong>Tanggal:</strong> ${
-      consultation.createdAt
-        ? new Date(consultation.createdAt.toDate()).toLocaleString("id-ID")
-        : "Baru"
-    }</p>
+    <div class="consultation-details">
+      <p><strong>💰 Harga:</strong> Rp ${consultation.price.toLocaleString(
+        "id-ID"
+      )}</p>
+      <p><strong>📅 Dibuat:</strong> ${dateFormatted}</p>
+      ${
+        consultation.approvedAt
+          ? `<p><strong>✅ Disetujui:</strong> ${new Date(
+              consultation.approvedAt.toDate()
+            ).toLocaleString("id-ID")}</p>`
+          : ""
+      }
+      ${
+        consultation.finishedAt
+          ? `<p><strong>✔️ Selesai:</strong> ${new Date(
+              consultation.finishedAt.toDate()
+            ).toLocaleString("id-ID")}</p>`
+          : ""
+      }
+      ${
+        consultation.status === "rejected" && consultation.rejectionReason
+          ? `<p class="rejection-reason"><strong>❌ Alasan:</strong> ${consultation.rejectionReason}</p>`
+          : ""
+      }
+    </div>
     ${
       consultation.paymentProofUrl
-        ? `<p><img src="${consultation.paymentProofUrl}" alt="Bukti Pembayaran" class="payment-proof-preview" onclick="window.open('${consultation.paymentProofUrl}', '_blank')"></p>`
+        ? `
+      <div class="payment-proof-section">
+        <p><strong>📷 Bukti Pembayaran:</strong></p>
+        <img 
+          src="${consultation.paymentProofUrl}" 
+          alt="Bukti Pembayaran" 
+          class="payment-proof-preview" 
+          onclick="window.open('${consultation.paymentProofUrl}', '_blank')"
+          loading="lazy"
+        >
+      </div>
+    `
         : ""
     }
     <div class="consultation-actions">
       ${
+        consultation.status === "pending"
+          ? `
+        <p class="waiting-message">⏳ Menunggu persetujuan dari bidan...</p>
+      `
+          : ""
+      }
+      ${
         consultation.status === "active"
-          ? `<button class="btn btn-primary open-chat-btn" data-id="${id}" data-name="${consultation.patientName}">Buka Chat</button>`
+          ? `
+        <button class="btn btn-primary open-chat-btn" data-id="${id}" data-name="Bidan">
+          <span>💬</span> Buka Chat - Mulai Konsultasi
+        </button>
+      `
+          : ""
+      }
+      ${
+        consultation.status === "finished"
+          ? `
+        <button class="btn btn-outline view-history-btn" data-id="${id}" data-name="Bidan">
+          <span>👁️</span> Lihat Riwayat Chat
+        </button>
+      `
+          : ""
+      }
+      ${
+        consultation.status === "rejected"
+          ? `
+        <p class="rejected-message">❌ Konsultasi ditolak. Silakan ajukan kembali dengan bukti pembayaran yang benar.</p>
+      `
           : ""
       }
     </div>
   `;
 
+  // Add event listeners
   const openChatBtn = card.querySelector(".open-chat-btn");
   if (openChatBtn) {
     openChatBtn.addEventListener("click", () => {
-      openChatRoom(id, consultation.patientName);
+      openChatRoom(id, "Bidan");
+    });
+  }
+
+  const viewHistoryBtn = card.querySelector(".view-history-btn");
+  if (viewHistoryBtn) {
+    viewHistoryBtn.addEventListener("click", () => {
+      openChatRoom(id, "Bidan", true);
     });
   }
 
   return card;
 }
 
-// Open Chat Room
-function openChatRoom(consultationId, patientName) {
+// Open Chat Room - ENHANCED
+function openChatRoom(consultationId, bidanName, readOnly = false) {
   currentConsultationId = consultationId;
 
-  document.getElementById("chat-room-title").textContent = `Chat dengan Bidan`;
-  document.getElementById("chat-room-subtitle").textContent = `Konsultasi`;
+  const chatRoomTitle = document.getElementById("chat-room-title");
+  const chatRoomSubtitle = document.getElementById("chat-room-subtitle");
+
+  if (chatRoomTitle) {
+    chatRoomTitle.textContent = `💬 Chat dengan ${bidanName}`;
+  }
+  if (chatRoomSubtitle) {
+    chatRoomSubtitle.textContent = readOnly
+      ? "Riwayat Konsultasi (Selesai)"
+      : "Konsultasi Aktif";
+  }
+
+  // Disable input if read-only
+  const messageForm = document.getElementById("message-form");
+  const messageInput = document.getElementById("message-input");
+  if (messageForm && messageInput) {
+    if (readOnly) {
+      messageInput.disabled = true;
+      messageInput.placeholder = "Konsultasi telah selesai";
+      messageForm.style.opacity = "0.6";
+    } else {
+      messageInput.disabled = false;
+      messageInput.placeholder = "Ketik pesan...";
+      messageForm.style.opacity = "1";
+    }
+  }
 
   showSection("chatRoom");
   loadMessages(consultationId);
+
+  console.log("✓ Chat room opened:", consultationId);
 }
 
-// Load Messages
+// Load Messages - REAL-TIME
 function loadMessages(consultationId) {
   const messagesContainer = document.getElementById("messages-container");
   if (!messagesContainer) return;
 
-  messagesContainer.innerHTML = "<p>Memuat pesan...</p>";
+  messagesContainer.innerHTML = '<p class="empty-state">Memuat pesan...</p>';
 
   if (messagesUnsubscribe) {
     messagesUnsubscribe();
@@ -430,37 +589,73 @@ function loadMessages(consultationId) {
     orderBy("timestamp", "asc")
   );
 
-  messagesUnsubscribe = onSnapshot(q, (snapshot) => {
-    messagesContainer.innerHTML = "";
+  messagesUnsubscribe = onSnapshot(
+    q,
+    (snapshot) => {
+      messagesContainer.innerHTML = "";
 
-    if (snapshot.empty) {
-      messagesContainer.innerHTML =
-        '<p class="empty-state">Belum ada pesan. Mulai percakapan!</p>';
-      return;
+      if (snapshot.empty) {
+        messagesContainer.innerHTML =
+          '<p class="empty-state">💬 Belum ada pesan. Mulai konsultasi dengan mengirim pesan!</p>';
+        return;
+      }
+
+      snapshot.forEach((doc) => {
+        const message = doc.data();
+        const messageElement = createMessageElement(message);
+        messagesContainer.appendChild(messageElement);
+      });
+
+      // Auto-scroll to bottom
+      setTimeout(() => {
+        messagesContainer.scrollTo({
+          top: messagesContainer.scrollHeight,
+          behavior: "smooth",
+        });
+      }, 100);
+    },
+    (error) => {
+      console.error("Load messages error:", error);
+      messagesContainer.innerHTML = '<p class="error">Gagal memuat pesan</p>';
     }
-
-    snapshot.forEach((doc) => {
-      const message = doc.data();
-      const messageElement = createMessageElement(message);
-      messagesContainer.appendChild(messageElement);
-    });
-
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-  });
+  );
 }
 
-// Create Message Element
+// Create Message Element - ENHANCED
 function createMessageElement(message) {
   const div = document.createElement("div");
-  const isOwnMessage = message.senderId === currentUser.uid;
+  div.style.animation = "fadeIn 0.3s ease";
+
+  // System message
+  if (message.isSystemMessage) {
+    div.className = "message message-system";
+    div.innerHTML = `
+      <div class="message-text system-message">${escapeHtml(message.text)}</div>
+      <span class="message-time">${
+        message.timestamp
+          ? new Date(message.timestamp.toDate()).toLocaleTimeString("id-ID", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : "Mengirim..."
+      }</span>
+    `;
+    return div;
+  }
+
+  // Regular message
+  const isOwnMessage = currentUser && message.senderId === currentUser.uid;
   div.className = `message ${isOwnMessage ? "message-own" : "message-other"}`;
 
   div.innerHTML = `
     <div class="message-header">
-      <strong>${message.senderName}</strong>
+      <strong>${message.senderName || "User"}</strong>
       <span class="message-time">${
         message.timestamp
-          ? new Date(message.timestamp.toDate()).toLocaleTimeString("id-ID")
+          ? new Date(message.timestamp.toDate()).toLocaleTimeString("id-ID", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
           : "Mengirim..."
       }</span>
     </div>
@@ -470,7 +665,7 @@ function createMessageElement(message) {
   return div;
 }
 
-// Send Message
+// Send Message - ENHANCED
 const messageForm = document.getElementById("message-form");
 if (messageForm) {
   messageForm.addEventListener("submit", async (e) => {
@@ -481,6 +676,11 @@ if (messageForm) {
 
     if (!text || !currentConsultationId) return;
 
+    if (messageInput.disabled) {
+      showNotification("Konsultasi telah selesai", "warning");
+      return;
+    }
+
     try {
       await addDoc(
         collection(db, "consultations", currentConsultationId, "messages"),
@@ -489,12 +689,14 @@ if (messageForm) {
           senderId: currentUser.uid,
           senderName: currentUserData.name || currentUserData.email || "Pasien",
           timestamp: serverTimestamp(),
+          isSystemMessage: false,
         }
       );
 
       messageInput.value = "";
+      console.log("✓ Message sent");
     } catch (error) {
-      console.error("Send message error:", error);
+      console.error("✗ Send message error:", error);
       showNotification("Gagal mengirim pesan", "error");
     }
   });
@@ -511,8 +713,14 @@ if (backToDashboardBtn) {
 
     currentConsultationId = null;
     showSection("dashboard");
+
+    console.log("✓ Back to dashboard");
   });
 }
+
+// ========================================
+// UTILITY FUNCTIONS
+// ========================================
 
 // Utility Functions
 function escapeHtml(text) {
@@ -535,7 +743,10 @@ function fileToBase64(file) {
   });
 }
 
-// Authentication State
+// ========================================
+// AUTHENTICATION STATE
+// ========================================
+
 onAuthStateChanged(auth, async (user) => {
   showLoading();
 
@@ -556,6 +767,8 @@ onAuthStateChanged(auth, async (user) => {
 
         showSection("dashboard");
         loadPatientDashboard();
+
+        console.log("✓ Patient logged in:", currentUserData.name);
       } else {
         await signOut(auth);
         showNotification("Akun tidak valid untuk pasien", "error");
@@ -564,6 +777,7 @@ onAuthStateChanged(auth, async (user) => {
     } catch (error) {
       console.error("Load user data error:", error);
       showNotification("Gagal memuat data pengguna", "error");
+      showSection("login");
     }
   } else {
     currentUser = null;
@@ -574,6 +788,10 @@ onAuthStateChanged(auth, async (user) => {
 
   hideLoading();
 });
+
+// ========================================
+// LOGIN & REGISTER
+// ========================================
 
 // Login Form
 const loginForm = document.getElementById("pasien-login-form");
@@ -598,6 +816,8 @@ if (loginForm) {
         errorMessage = "Password salah";
       } else if (error.code === "auth/invalid-email") {
         errorMessage = "Format email tidak valid";
+      } else if (error.code === "auth/invalid-credential") {
+        errorMessage = "Email atau password salah";
       }
 
       showNotification(errorMessage, "error");
@@ -691,4 +911,4 @@ if (logoutBtn) {
   });
 }
 
-console.log("Pasien app initialized");
+console.log("✓ Pasien app initialized");

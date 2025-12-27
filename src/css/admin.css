@@ -139,6 +139,8 @@
 .approve-btn {
   background: linear-gradient(135deg, var(--secondary-color), #3da86b);
   animation: pulse 1.5s infinite;
+  position: relative;
+  overflow: hidden;
 }
 
 @keyframes pulse {
@@ -149,6 +151,24 @@
   50% {
     box-shadow: 0 6px 16px rgba(80, 200, 120, 0.5);
   }
+}
+
+.approve-btn::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.approve-btn:hover::before {
+  width: 300px;
+  height: 300px;
 }
 
 .approve-btn:hover {
@@ -267,6 +287,269 @@
 #admin-login-section .btn-back-home:hover {
   box-shadow: 0 6px 24px rgba(74, 144, 226, 0.35);
   border-color: transparent;
+}
+
+/* Admin Chat Enhancements */
+#chat-room-section .chat-header {
+  background: linear-gradient(135deg, #4a90e2, #357abd);
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 16px 16px 0 0;
+}
+
+.btn-back-chat {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-back-chat:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateX(-5px);
+}
+
+.chat-info h3 {
+  margin: 0 0 0.25rem 0;
+  color: white;
+  font-size: 1.3rem;
+}
+
+.chat-info p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+}
+
+#finish-consultation-btn {
+  background: var(--secondary-color);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(80, 200, 120, 0.4);
+}
+
+#finish-consultation-btn:hover {
+  background: #3da86b;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(80, 200, 120, 0.5);
+}
+
+/* System Messages */
+.message-system {
+  background: #f0f9ff !important;
+  border: 1px solid #bae6fd;
+  text-align: center;
+  margin: 1rem auto;
+  max-width: 80%;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+}
+
+.message-system .system-message {
+  color: #0369a1;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.message-system .message-time {
+  color: #0c4a6e;
+  font-size: 0.75rem;
+}
+
+/* Payment Proof Preview Enhancement */
+.payment-proof-preview {
+  cursor: pointer;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.payment-proof-preview:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Consultation Actions Enhancement */
+.consultation-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.consultation-actions button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.consultation-actions button span {
+  font-size: 1.1rem;
+}
+
+/* Statistics Cards Enhancement */
+.stat-card {
+  cursor: default;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Chat Container Enhancement */
+#chat-room-section .chat-container {
+  border-radius: 0 0 16px 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+#chat-room-section .message-form {
+  padding: 1.5rem 2rem;
+  background: white;
+  border-radius: 0 0 16px 16px;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Guest Tag */
+.guest-tag {
+  display: inline-block;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: white;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  margin-left: 0.5rem;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+/* Consultation Details Section */
+.consultation-details {
+  margin: 1rem 0;
+}
+
+.consultation-details p {
+  margin: 0.5rem 0;
+  color: var(--text-dark);
+  font-size: 0.95rem;
+}
+
+/* Payment Proof Section */
+.payment-proof-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.payment-proof-section p {
+  margin-bottom: 0.75rem;
+  color: var(--text-dark);
+  font-weight: 600;
+}
+
+/* Reject Button */
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  border: none;
+}
+
+.btn-danger:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+/* Finish Now Button */
+.btn-success {
+  background: linear-gradient(135deg, var(--secondary-color), #3da86b);
+  color: white;
+  border: none;
+}
+
+.btn-success:hover {
+  background: linear-gradient(135deg, #3da86b, #2d7a4f);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(80, 200, 120, 0.4);
+}
+
+/* View History Button */
+.btn-outline {
+  background: transparent;
+  color: var(--primary-color);
+  border: 2px solid var(--primary-color);
+}
+
+.btn-outline:hover {
+  background: var(--primary-color);
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* Message animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Consultation card hover effect */
+.consultation-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.consultation-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(74, 144, 226, 0.05),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.consultation-card:hover::before {
+  left: 100%;
 }
 
 /* Responsive for admin */

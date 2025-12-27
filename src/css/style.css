@@ -94,15 +94,19 @@ body {
 #app-main {
   min-height: calc(100vh - 80px);
   padding: calc(var(--spacing-unit) * 3) 0;
+  display: block !important;
 }
 
-/* Sections */
+/* Sections - IMPROVED VISIBILITY */
 .section {
-  display: none;
+  display: none !important;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .section.active {
-  display: block;
+  display: block !important;
+  opacity: 1;
   animation: fadeIn 0.4s ease;
 }
 
@@ -355,21 +359,46 @@ body {
   display: block;
 }
 
+/* System Messages */
+.message-system {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe) !important;
+  border: 2px solid #3b82f6;
+  text-align: center;
+  margin: 1.5rem auto;
+  max-width: 70%;
+  padding: 1rem 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+.message-system .system-message {
+  color: #1e40af;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+}
+
+.message-system .message-time {
+  color: #3b82f6;
+  font-size: 0.75rem;
+  display: block;
+  margin-top: 0.25rem;
+}
+
 /* Payment Proof Preview */
 .payment-proof-preview {
-  max-width: 220px;
-  max-height: 220px;
-  border-radius: 12px;
-  margin-top: var(--spacing-unit);
-  border: 2px solid var(--border-color);
   cursor: pointer;
+  max-width: 200px;
+  height: auto;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
-  box-shadow: var(--shadow);
 }
 
 .payment-proof-preview:hover {
   transform: scale(1.05);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 /* Dashboard - Better Organization */

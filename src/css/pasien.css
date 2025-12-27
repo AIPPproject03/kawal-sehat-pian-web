@@ -50,18 +50,109 @@
   border-left-color: var(--secondary-color);
 }
 
+/* Status-specific card styling */
+.consultation-card.status-pending {
+  border-left-color: #ffc107;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 193, 7, 0.05),
+    rgba(255, 193, 7, 0.02)
+  );
+}
+
+.consultation-card.status-active {
+  border-left-color: var(--secondary-color);
+  background: linear-gradient(
+    135deg,
+    rgba(80, 200, 120, 0.05),
+    rgba(61, 168, 107, 0.02)
+  );
+}
+
+.consultation-card.status-finished {
+  border-left-color: #6c757d;
+  background: linear-gradient(
+    135deg,
+    rgba(108, 117, 125, 0.05),
+    rgba(108, 117, 125, 0.02)
+  );
+}
+
+.consultation-card.status-rejected {
+  border-left-color: #dc3545;
+  background: linear-gradient(
+    135deg,
+    rgba(220, 53, 69, 0.05),
+    rgba(220, 53, 69, 0.02)
+  );
+}
+
+/* Waiting & Rejection Messages */
+.waiting-message {
+  text-align: center;
+  color: #856404;
+  background: #fff3cd;
+  padding: 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.rejected-message {
+  text-align: center;
+  color: #721c24;
+  background: #f8d7da;
+  padding: 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  border: 1px solid #f5c6cb;
+}
+
+.rejection-reason {
+  color: #dc3545;
+  background: #f8d7da;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-top: 0.5rem;
+  border-left: 3px solid #dc3545;
+}
+
 /* Patient specific button styling */
 .btn-outline:hover {
   transform: translateY(-1px);
 }
 
 /* Success states for patient */
-.consultation-card.status-active {
-  background: linear-gradient(
-    135deg,
-    rgba(80, 200, 120, 0.05),
-    rgba(61, 168, 107, 0.02)
-  );
+.open-chat-btn {
+  background: linear-gradient(135deg, var(--secondary-color), #3da86b);
+  animation: glow 2s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    box-shadow: 0 4px 12px rgba(80, 200, 120, 0.4);
+  }
+  50% {
+    box-shadow: 0 6px 20px rgba(80, 200, 120, 0.7);
+  }
+}
+
+.open-chat-btn:hover {
+  animation: none;
+  background: linear-gradient(135deg, #3da86b, var(--secondary-color));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(80, 200, 120, 0.6);
 }
 
 /* Patient profile section (if needed) */
@@ -99,6 +190,37 @@
   font-weight: 600;
 }
 
+/* Consultation Details Enhancement */
+.consultation-details {
+  margin: 1rem 0;
+}
+
+.consultation-details p {
+  margin: 0.5rem 0;
+  font-size: 0.95rem;
+}
+
+/* Payment Proof Section */
+.payment-proof-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.payment-proof-preview {
+  cursor: pointer;
+  max-width: 200px;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.payment-proof-preview:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
 /* Responsive adjustments */
 @media (max-width: 480px) {
   .mobile-header h2 {
@@ -107,6 +229,12 @@
 
   .mobile-header p {
     font-size: 0.85rem;
+  }
+
+  .waiting-message,
+  .rejected-message {
+    font-size: 0.9rem;
+    padding: 0.75rem;
   }
 }
 
@@ -117,6 +245,10 @@
     width: 100%;
     justify-content: center;
   }
+
+  .consultation-card {
+    margin-bottom: 1rem;
+  }
 }
 
 /* Desktop Pasien Layout */
@@ -124,25 +256,16 @@
   #pasien-login-section .auth-card,
   #pasien-register-section .auth-card {
     max-width: 500px;
-    margin: 3rem auto;
-    padding: 3rem;
+    margin: 2rem auto;
   }
 
   #pasien-dashboard-section .mobile-container {
     max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
   }
 
   #pasien-dashboard-section .mobile-header {
     max-width: 1200px;
     margin: 0 auto 2rem auto;
-    padding: 2rem 3rem;
-  }
-
-  #pasien-dashboard-section .service-cards-mobile {
-    max-width: 800px;
-    margin: 0 auto 3rem auto;
   }
 
   #pasien-consultations-list {
@@ -150,15 +273,9 @@
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: 1.5rem;
   }
-
-  .patient-info-card {
-    max-width: 600px;
-    margin: 0 auto 2rem auto;
-    padding: 2rem;
-  }
 }
 
-@media (min-width: 1400px) {
+@media (min-width: 1200px) {
   #pasien-dashboard-section .mobile-container,
   #pasien-dashboard-section .mobile-header {
     max-width: 1400px;
