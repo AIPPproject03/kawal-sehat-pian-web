@@ -128,6 +128,7 @@
 .btn-block {
   width: 100%;
   display: block;
+  margin-bottom: 16px;
 }
 
 .btn-icon {
@@ -1816,6 +1817,258 @@
 
   .back-icon {
     font-size: 1rem;
+  }
+}
+
+/* ===================================
+   DESKTOP OPTIMIZATION - PROPER LAYOUT
+   ======================================== */
+
+@media (min-width: 769px) {
+  /* Desktop Container - Max Width */
+  .mobile-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  /* Desktop Header - Centered */
+  .mobile-header {
+    max-width: 1200px;
+    margin: 0 auto 2rem auto;
+    border-radius: 16px;
+  }
+
+  /* Guest Header Desktop */
+  .guest-header {
+    max-width: 1200px;
+    margin: 0 auto 2rem auto;
+  }
+
+  /* Desktop Auth Card */
+  .auth-card.mobile-friendly {
+    max-width: 500px;
+    margin: 2rem auto;
+    padding: 2.5rem;
+  }
+
+  /* Desktop Service Cards - 2 Column Grid */
+  .service-cards-mobile {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    max-width: 800px;
+    margin: 0 auto 2rem auto;
+  }
+
+  .service-card-mobile {
+    padding: 2rem;
+  }
+
+  /* Desktop Dashboard Cards */
+  .dashboard-card {
+    max-width: 1200px;
+    margin: 0 auto 2rem auto;
+  }
+
+  .mobile-card {
+    max-width: 1200px;
+    margin: 0 auto 1.5rem auto;
+    padding: 2rem;
+  }
+
+  /* Desktop Modal - Centered */
+  .modal.active {
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-content.mobile-modal {
+    max-width: 600px;
+    width: 90%;
+    border-radius: 20px;
+    max-height: 85vh;
+  }
+
+  /* Desktop Payment Steps */
+  .payment-tabs {
+    gap: 1rem;
+  }
+
+  .payment-tab {
+    padding: 1.5rem;
+  }
+
+  /* Desktop QRIS */
+  .qris-code {
+    max-width: 320px;
+  }
+
+  /* Desktop Bank Card */
+  .bank-card {
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  /* Desktop Chat Container */
+  .chat-header.mobile-chat-header {
+    max-width: 1200px;
+    margin: 0 auto;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .chat-container.mobile-chat {
+    max-width: 1200px;
+    margin: 0 auto;
+    height: 600px;
+    border-radius: 0 0 16px 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .mobile-message-form {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.5rem;
+  }
+
+  /* Desktop Welcome Card */
+  .welcome-card {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  /* Desktop Guest Info */
+  .guest-warning-banner,
+  .guest-benefits,
+  .guest-actions {
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Desktop Consultation Cards */
+  .consultation-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .consultation-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Desktop Form Inputs - Better Spacing */
+  .auth-card.mobile-friendly input,
+  .auth-card.mobile-friendly select {
+    padding: 1rem;
+  }
+
+  /* Desktop Buttons */
+  .btn-large {
+    padding: 1.1rem 2rem;
+    font-size: 1.15rem;
+  }
+
+  .btn-back-home {
+    max-width: 250px;
+  }
+
+  /* Desktop Upload Area */
+  .file-upload-label {
+    padding: 3rem;
+  }
+
+  .upload-icon {
+    font-size: 4rem;
+  }
+
+  /* Desktop Statistics (Admin) */
+  .stats-grid {
+    max-width: 1200px;
+    margin: 0 auto 2rem auto;
+  }
+
+  /* Desktop Admin Dashboard Cards */
+  #pending-consultations-list,
+  #active-consultations-list,
+  #finished-consultations-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+  }
+
+  /* Desktop Patient Consultations List */
+  #pasien-consultations-list,
+  #guest-current-consultation {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+/* ========================================
+   LARGE DESKTOP (1400px+)
+   ======================================== */
+
+@media (min-width: 1400px) {
+  .mobile-container {
+    max-width: 1400px;
+    padding: 3rem;
+  }
+
+  .mobile-header {
+    max-width: 1400px;
+    padding: 2rem 3rem;
+  }
+
+  .dashboard-card,
+  .mobile-card {
+    max-width: 1400px;
+  }
+
+  .chat-container.mobile-chat {
+    max-width: 1400px;
+    height: 700px;
+  }
+
+  .service-cards-mobile {
+    max-width: 1000px;
+    gap: 3rem;
+  }
+
+  .service-card-mobile {
+    padding: 2.5rem;
+  }
+
+  /* Desktop consultation grid - 3 columns on large screens */
+  #pending-consultations-list,
+  #active-consultations-list,
+  #finished-consultations-list,
+  #pasien-consultations-list {
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 2rem;
+  }
+}
+
+/* ========================================
+   EXTRA LARGE DESKTOP (1920px+)
+   ======================================== */
+
+@media (min-width: 1920px) {
+  .mobile-container {
+    max-width: 1600px;
+  }
+
+  .mobile-header {
+    max-width: 1600px;
+  }
+
+  .dashboard-card,
+  .mobile-card {
+    max-width: 1600px;
+  }
+
+  .chat-container.mobile-chat {
+    max-width: 1600px;
   }
 }
 

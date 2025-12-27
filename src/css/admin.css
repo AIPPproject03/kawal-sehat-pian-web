@@ -305,3 +305,64 @@
     width: 100%;
   }
 }
+
+/* Desktop Admin Layout */
+@media (min-width: 769px) {
+  .admin-header {
+    max-width: 1200px;
+    margin: 0 auto 3rem auto;
+    padding: 3rem;
+  }
+
+  .stats-grid {
+    max-width: 1200px;
+    margin: 0 auto 3rem auto;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+
+  .stat-card {
+    padding: 2rem;
+  }
+
+  .stat-icon {
+    font-size: 3rem;
+  }
+
+  .dashboard-card {
+    max-width: 1200px;
+    margin: 0 auto 2rem auto;
+    padding: 2.5rem;
+  }
+
+  /* Admin consultation cards in grid */
+  #pending-consultations-list,
+  #active-consultations-list,
+  #finished-consultations-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+  }
+
+  /* Desktop Auth Card */
+  #admin-login-section .auth-card {
+    max-width: 500px;
+    margin: 3rem auto;
+    padding: 3rem;
+  }
+}
+
+@media (min-width: 1400px) {
+  .admin-header,
+  .stats-grid,
+  .dashboard-card {
+    max-width: 1400px;
+  }
+
+  #pending-consultations-list,
+  #active-consultations-list,
+  #finished-consultations-list {
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 2rem;
+  }
+}

@@ -931,6 +931,75 @@ body {
   }
 }
 
+/* Landing Page - Desktop Optimization */
+@media (min-width: 769px) {
+  .welcome-card {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 4rem 3rem;
+  }
+
+  .logo-wrapper {
+    margin-bottom: 2rem;
+  }
+
+  .logo-icon {
+    width: 140px;
+    height: 140px;
+  }
+
+  .welcome-card h2 {
+    font-size: 2.5rem;
+  }
+
+  .tagline {
+    font-size: 1.2rem;
+    margin-bottom: 3rem;
+  }
+
+  .role-selection {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .role-cards {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+
+  .role-card {
+    padding: 2.5rem 2rem;
+  }
+
+  .role-icon {
+    font-size: 4.5rem;
+  }
+
+  .features-info {
+    max-width: 800px;
+    margin: 3rem auto 0 auto;
+  }
+
+  .feature-list {
+    max-width: 700px;
+  }
+
+  .feature-item {
+    padding: 1.5rem;
+  }
+}
+
+@media (min-width: 1400px) {
+  .welcome-card {
+    max-width: 1200px;
+  }
+
+  .role-cards {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+}
+
 /* Utility Classes */
 .text-center {
   text-align: center;

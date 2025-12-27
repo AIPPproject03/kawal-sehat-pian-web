@@ -334,3 +334,88 @@
     justify-content: center;
   }
 }
+
+/* Desktop Tamu Layout */
+@media (min-width: 769px) {
+  .guest-warning-banner {
+    max-width: 800px;
+    margin: 0 auto 2rem auto;
+    padding: 2rem;
+  }
+
+  .guest-benefits {
+    max-width: 700px;
+    margin: 0 auto 2rem auto;
+    padding: 2rem;
+  }
+
+  .guest-actions {
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .guest-actions .btn-back-home {
+    width: auto;
+    justify-content: center;
+    padding: 0.85rem 2rem;
+  }
+
+  #guest-dashboard-section .mobile-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  #guest-dashboard-section .mobile-header {
+    max-width: 1200px;
+    margin: 0 auto 2rem auto;
+    padding: 2rem 3rem;
+  }
+
+  .guest-header {
+    max-width: 1200px;
+    padding: 2rem;
+  }
+
+  .guest-badge {
+    padding: 0.75rem 1.5rem;
+  }
+
+  .guest-reminder {
+    max-width: 800px;
+    margin: 0 auto 2rem auto;
+    padding: 1.5rem;
+  }
+
+  #guest-current-consultation {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .chat-warning {
+    max-width: 800px;
+    margin: 0 auto 1.5rem auto;
+  }
+
+  .session-end-warning {
+    max-width: 600px;
+    margin: 2rem auto;
+  }
+}
+
+@media (min-width: 1400px) {
+  #guest-dashboard-section .mobile-container,
+  #guest-dashboard-section .mobile-header,
+  .guest-header {
+    max-width: 1400px;
+  }
+
+  .guest-warning-banner {
+    max-width: 900px;
+  }
+
+  #guest_current_consultation {
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 2rem;
+  }
+}
