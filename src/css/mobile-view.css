@@ -179,21 +179,35 @@
 }
 
 .btn-back {
-  background: none;
-  border: none;
+  background: linear-gradient(
+    135deg,
+    rgba(74, 144, 226, 0.1),
+    rgba(53, 122, 189, 0.05)
+  );
+  border: 2px solid var(--primary-color);
   color: var(--primary-color);
-  font-size: 1.2rem;
-  padding: 0.5rem 0;
-  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 1.5rem;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  transition: transform 0.3s ease;
+  gap: 0.75rem;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 600;
+  width: auto;
 }
 
 .btn-back:hover {
+  background: linear-gradient(135deg, var(--primary-color), #357abd);
+  color: white;
   transform: translateX(-5px);
+  box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+}
+
+.btn-back:active {
+  transform: translateX(-3px) scale(0.98);
 }
 
 /* Mobile Friendly Auth Card */
@@ -1477,4 +1491,96 @@ body.loading {
 
 body {
   animation: pageLoad 0.5s ease;
+}
+
+/* ========================================
+   BACK TO HOME BUTTON - PROFESSIONAL DESIGN
+   ======================================== */
+
+.btn-back-home {
+  background: linear-gradient(
+    135deg,
+    rgba(74, 144, 226, 0.1),
+    rgba(53, 122, 189, 0.05)
+  );
+  border: 2px solid var(--primary-color);
+  color: var(--primary-color);
+  font-size: 0.95rem;
+  padding: 0.75rem 1.5rem;
+  margin-bottom: 1.5rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-back-home::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.btn-back-home:hover::before {
+  left: 100%;
+}
+
+.btn-back-home:hover {
+  background: linear-gradient(135deg, var(--primary-color), #357abd);
+  color: white;
+  transform: translateX(-5px);
+  box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+  border-color: var(--primary-color);
+}
+
+.btn-back-home:active {
+  transform: translateX(-3px) scale(0.98);
+}
+
+.back-icon {
+  font-size: 1.2rem;
+  transition: transform 0.3s ease;
+}
+
+.btn-back-home:hover .back-icon {
+  transform: translateX(-3px);
+}
+
+/* Alternative style for back button in auth cards */
+.auth-card .btn-back,
+.auth-card .btn-back-home {
+  margin-bottom: 1.5rem;
+  width: auto;
+  display: inline-flex;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .btn-back-home {
+    padding: 0.65rem 1.25rem;
+    font-size: 0.9rem;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .btn-back-home {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+  }
 }

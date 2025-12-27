@@ -8,7 +8,7 @@
     <link rel="icon" type="image/png" href="../img/logo-kawan-sehat-pian.png">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/admin.css">
-</head>
+    <link rel="stylesheet" href="../css/mobile-view.css">
 
 <body>
     <!-- Header -->
@@ -30,9 +30,11 @@
         <!-- Login Section -->
         <section id="admin-login-section" class="section active">
             <div class="container">
-                <div class="auth-card">
-                    <button type="button" onclick="window.location.href='../index.html'" class="btn-back">← Kembali ke
-                        Beranda</button>
+                <div class="auth-card mobile-friendly">
+                    <button type="button" onclick="window.location.href='../index.html'" class="btn-back-home">
+                        <span class="back-icon">←</span>
+                        <span>Kembali ke Beranda</span>
+                    </button>
                     <h2>Login Admin (Bidan)</h2>
                     <form id="admin-login-form">
                         <div class="form-group">
@@ -130,9 +132,9 @@
         <div class="spinner"></div>
         <p class="loading-text">Memproses</p>
     </div>
-    <div id="toast-notification" class="toast-notification">
-        <span id="toast-message"></span>
-    </div>
+
+    <!-- Toast Container (New Professional Design) -->
+    <div id="toast-container"></div>
 
     <!-- Firebase SDK -->
     <script type="module" src="../js/app.js"></script>

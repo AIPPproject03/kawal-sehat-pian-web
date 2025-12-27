@@ -279,6 +279,40 @@
   margin-top: 1.5rem;
 }
 
+/* Guest Actions Enhancement */
+.guest-actions .btn-back-home {
+  margin-top: 1rem;
+  animation: fadeInUp 0.6s ease 0.3s both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Guest back button hover effect */
+.guest-actions .btn-back-home:hover {
+  background: linear-gradient(135deg, var(--primary-color), #357abd);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(74, 144, 226, 0.4);
+}
+
+/* Mobile guest actions */
+@media (max-width: 768px) {
+  .guest-actions .btn-back-home {
+    width: 100%;
+    justify-content: center;
+    padding: 0.85rem 1.5rem;
+  }
+}
+
 /* Responsive */
 @media (max-width: 480px) {
   .guest-warning-banner {

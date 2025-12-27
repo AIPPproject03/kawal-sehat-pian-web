@@ -20,6 +20,9 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
+// Import toast manager
+import toast from "./toast.js";
+
 // Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyA00JIvQxqKIkTI_9w14_NRgHZMunFked8",
@@ -72,25 +75,8 @@ function showSection(sectionName) {
   }
 }
 
-function showNotification(message, type = "info") {
-  const toast = document.getElementById("toast-notification");
-  const toastMessage = document.getElementById("toast-message");
-
-  if (!toast || !toastMessage) return;
-
-  const icons = {
-    success: "✅",
-    error: "❌",
-    info: "ℹ️",
-    warning: "⚠️",
-  };
-
-  toastMessage.textContent = `${icons[type] || icons.info} ${message}`;
-  toast.className = `toast-notification show ${type}`;
-
-  setTimeout(() => {
-    toast.classList.remove("show");
-  }, 3000);
+function showNotification(message, type = "info", title = null) {
+  toast.show(message, type, 4000, title);
 }
 
 // Modal Payment Logic

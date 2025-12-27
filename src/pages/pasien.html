@@ -32,8 +32,9 @@
         <section id="pasien-login-section" class="section active">
             <div class="container">
                 <div class="auth-card mobile-friendly">
-                    <button type="button" onclick="window.location.href='../index.html'" class="btn-back">← Kembali ke
-                        Beranda
+                    <button type="button" onclick="window.location.href='../index.html'" class="btn-back-home">
+                        <span class="back-icon">←</span>
+                        <span>Kembali ke Beranda</span>
                     </button>
                     <h2>Login Pasien</h2>
                     <form id="pasien-login-form">
@@ -57,7 +58,10 @@
         <section id="pasien-register-section" class="section">
             <div class="container">
                 <div class="auth-card mobile-friendly">
-                    <button type="button" id="back-to-login" class="btn-back">← Kembali ke Login</button>
+                    <button type="button" id="back-to-login" class="btn-back">
+                        <span class="back-icon">←</span>
+                        <span>Kembali ke Login</span>
+                    </button>
                     <h2>Daftar Pasien</h2>
                     <form id="pasien-register-form">
                         <div class="form-group">
@@ -286,9 +290,9 @@
         <div class="spinner"></div>
         <p class="loading-text">Memproses</p>
     </div>
-    <div id="toast-notification" class="toast-notification">
-        <span id="toast-message"></span>
-    </div>
+
+    <!-- Toast Container (New Professional Design) -->
+    <div id="toast-container"></div>
 
     <!-- Firebase SDK -->
     <script type="module" src="../js/pasien.js"></script>

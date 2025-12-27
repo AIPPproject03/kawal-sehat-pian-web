@@ -60,8 +60,11 @@
                             <span class="btn-icon">📝</span>
                             Daftar sebagai Pasien
                         </button>
-                        <button onclick="window.location.href='../index.html'" class="btn btn-link">← Kembali ke
-                            Beranda</button>
+                        <button onclick="window.location.href='../index.html'" class="btn-back-home"
+                            style="margin-top: 1rem; width: 100%;">
+                            <span class="back-icon">←</span>
+                            <span>Kembali ke Beranda</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -305,9 +308,9 @@
         <div class="spinner"></div>
         <p class="loading-text">Memproses</p>
     </div>
-    <div id="toast-notification" class="toast-notification">
-        <span id="toast-message"></span>
-    </div>
+
+    <!-- Toast Container (New Professional Design) -->
+    <div id="toast-container"></div>
 
     <!-- Firebase SDK -->
     <script type="module" src="../js/tamu.js"></script>

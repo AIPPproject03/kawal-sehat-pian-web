@@ -23,6 +23,7 @@ import {
   onSnapshot,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+import toast from "./toast.js";
 
 // Firebase Configuration
 // TODO: Replace with your Firebase config
@@ -93,26 +94,8 @@ function showSection(sectionName) {
 }
 
 // Toast Notification System with Icon
-function showNotification(message, type = "info") {
-  const toast = document.getElementById("toast-notification");
-  const toastMessage = document.getElementById("toast-message");
-
-  // Set message
-  toastMessage.textContent = message;
-
-  // Remove all type classes
-  toast.classList.remove("success", "error", "warning", "info");
-
-  // Add type class
-  toast.classList.add(type);
-
-  // Show toast
-  toast.classList.add("show");
-
-  // Hide after 3 seconds
-  setTimeout(() => {
-    toast.classList.remove("show");
-  }, 3000);
+function showNotification(message, type = "info", title = null) {
+  toast.show(message, type, 4000, title);
 }
 
 // Modal Payment Logic
