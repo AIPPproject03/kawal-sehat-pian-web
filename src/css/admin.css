@@ -1,0 +1,262 @@
+/* Admin Page Specific Styles */
+
+/* Admin Dashboard Enhancements */
+.admin-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+  color: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(74, 144, 226, 0.3);
+  animation: slideDown 0.5s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.admin-header h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.admin-header p {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 1.05rem;
+}
+
+/* Statistics Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+  animation: fadeInUp 0.6s ease;
+  animation-fill-mode: both;
+  border-left: 4px solid var(--primary-color);
+}
+
+.stat-card:nth-child(1) {
+  animation-delay: 0.1s;
+  border-left-color: var(--warning-color);
+}
+
+.stat-card:nth-child(2) {
+  animation-delay: 0.2s;
+  border-left-color: var(--secondary-color);
+}
+
+.stat-card:nth-child(3) {
+  animation-delay: 0.3s;
+  border-left-color: var(--primary-color);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.stat-icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.stat-info h3 {
+  font-size: 2rem;
+  color: var(--primary-color);
+  margin: 0 0 0.25rem 0;
+  animation: countUp 1s ease;
+}
+
+@keyframes countUp {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.stat-info p {
+  margin: 0;
+  color: var(--text-light);
+  font-size: 0.95rem;
+}
+
+/* Admin Consultation Cards Enhancement */
+.dashboard-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Admin specific buttons */
+.approve-btn {
+  background: linear-gradient(135deg, var(--secondary-color), #3da86b);
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 4px 12px rgba(80, 200, 120, 0.3);
+  }
+  50% {
+    box-shadow: 0 6px 16px rgba(80, 200, 120, 0.5);
+  }
+}
+
+.approve-btn:hover {
+  animation: none;
+  transform: translateY(-2px);
+}
+
+/* Chat finish button */
+.btn-finish-mobile,
+#finish-consultation-btn {
+  background: var(--secondary-color);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(80, 200, 120, 0.4);
+}
+
+.btn-finish-mobile:hover,
+#finish-consultation-btn:hover {
+  background: #3da86b;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(80, 200, 120, 0.5);
+}
+
+/* Empty state for admin */
+#pending-consultations-list .empty-state,
+#active-consultations-list .empty-state,
+#finished-consultations-list .empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-light);
+  font-size: 1rem;
+}
+
+#pending-consultations-list .empty-state::before {
+  content: "⏳";
+  display: block;
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+#active-consultations-list .empty-state::before {
+  content: "✅";
+  display: block;
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+#finished-consultations-list .empty-state::before {
+  content: "✔️";
+  display: block;
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+/* Payment proof in admin view */
+.payment-proof-preview {
+  max-width: 180px;
+  max-height: 180px;
+  border-radius: 12px;
+  cursor: zoom-in;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid var(--border-color);
+}
+
+.payment-proof-preview:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  border-color: var(--primary-color);
+}
+
+/* Responsive for admin */
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card {
+    padding: 1rem;
+  }
+
+  .stat-icon {
+    font-size: 2rem;
+  }
+
+  .stat-info h3 {
+    font-size: 1.5rem;
+  }
+
+  .admin-header {
+    padding: 1.5rem;
+  }
+
+  .admin-header h2 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .consultation-actions {
+    flex-direction: column;
+  }
+
+  .consultation-actions button {
+    width: 100%;
+  }
+}

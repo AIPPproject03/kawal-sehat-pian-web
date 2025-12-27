@@ -1,0 +1,82 @@
+/* Pasien Page Specific Styles */
+
+/* Remove if already defined in mobile-view.css */
+.patient-dashboard-enhancement {
+  animation: fadeInUp 0.6s ease;
+}
+
+/* Dashboard Welcome Message */
+.mobile-header p {
+  margin-top: 0.5rem;
+  opacity: 0.9;
+  font-size: 0.95rem;
+}
+
+/* Consultation History Enhancements */
+#pasien-consultations-list .consultation-card {
+  border-left: 4px solid var(--primary-color);
+}
+
+#pasien-consultations-list .consultation-card:hover {
+  border-left-color: var(--secondary-color);
+}
+
+/* Patient specific button styling */
+.btn-outline:hover {
+  transform: translateY(-1px);
+}
+
+/* Success states for patient */
+.consultation-card.status-active {
+  background: linear-gradient(
+    135deg,
+    rgba(80, 200, 120, 0.05),
+    rgba(61, 168, 107, 0.02)
+  );
+}
+
+/* Patient profile section (if needed) */
+.patient-profile {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.patient-profile h4 {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+.patient-info-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.patient-info-item:last-child {
+  border-bottom: none;
+}
+
+.patient-info-label {
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+.patient-info-value {
+  color: var(--text-dark);
+  font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .mobile-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .mobile-header p {
+    font-size: 0.85rem;
+  }
+}

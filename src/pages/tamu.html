@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Konsultasi Tamu - Kawal Sehat Pian</title>
+    <link rel="icon" type="image/png" href="../img/logo-kawan-sehat-pian.png">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile-view.css">
+    <link rel="stylesheet" href="../css/tamu.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header id="app-header">
+        <div class="container">
+            <div class="header-brand">
+                <img src="../img/logo-kawan-sehat-pian.png" alt="Logo" class="header-logo">
+                <h1>Konsultasi Tamu</h1>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main -->
+    <main id="app-main">
+        <!-- Guest Info Section -->
+        <section id="guest-info-section" class="section active">
+            <div class="container">
+                <div class="welcome-card">
+                    <div class="guest-warning-banner">
+                        <div class="warning-icon">⚠️</div>
+                        <div class="warning-content">
+                            <h3>Konsultasi Tamu</h3>
+                            <p><strong>Perhatian:</strong> Sebagai tamu, riwayat konsultasi Anda <strong>TIDAK akan
+                                    tersimpan</strong> di sistem kami.</p>
+                            <p>Setelah konsultasi selesai, semua data akan hilang dan tidak dapat diakses kembali.</p>
+                        </div>
+                    </div>
+
+                    <div class="guest-benefits">
+                        <h3>✨ Keuntungan Daftar sebagai Pasien:</h3>
+                        <ul>
+                            <li>📋 Riwayat konsultasi tersimpan permanen</li>
+                            <li>🔄 Bisa konsultasi berulang dengan mudah</li>
+                            <li>📊 Tracking kondisi kesehatan</li>
+                            <li>💾 Data pribadi aman dan terenkripsi</li>
+                            <li>⚡ Proses lebih cepat di konsultasi berikutnya</li>
+                        </ul>
+                    </div>
+
+                    <div class="guest-actions">
+                        <button id="continue-as-guest" class="btn btn-accent btn-large btn-block">
+                            <span class="btn-icon">💬</span>
+                            Lanjut sebagai Tamu
+                        </button>
+                        <p class="or-divider">atau</p>
+                        <button onclick="window.location.href='pasien.html'"
+                            class="btn btn-primary btn-large btn-block">
+                            <span class="btn-icon">📝</span>
+                            Daftar sebagai Pasien
+                        </button>
+                        <button onclick="window.location.href='../index.html'" class="btn btn-link">← Kembali ke
+                            Beranda</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Guest Dashboard (One-time Use) -->
+        <section id="guest-dashboard-section" class="section">
+            <div class="container mobile-container">
+                <div class="mobile-header guest-header">
+                    <h2>💬 Konsultasi Tamu</h2>
+                    <div class="guest-badge">
+                        <span class="badge-icon">👤</span>
+                        <span>Mode Tamu</span>
+                    </div>
+                </div>
+
+                <!-- Guest Reminder -->
+                <div class="guest-reminder">
+                    <p>⚠️ Ini adalah sesi sementara. <a href="pasien.html" class="link-primary">Daftar sekarang</a>
+                        untuk menyimpan riwayat!</p>
+                </div>
+
+                <!-- Service Selection -->
+                <div class="service-cards-mobile">
+                    <div class="service-card-mobile" data-service="chat" data-price="15000">
+                        <div class="service-icon">💬</div>
+                        <h3>Chat Konsultasi</h3>
+                        <p class="service-price">Rp 15.000</p>
+                        <p class="service-desc">Konsultasi via chat dengan bidan</p>
+                    </div>
+                    <div class="service-card-mobile" data-service="phone" data-price="35000">
+                        <div class="service-icon">📞</div>
+                        <h3>Telepon Konsultasi</h3>
+                        <p class="service-price">Rp 35.000</p>
+                        <p class="service-desc">Konsultasi via telepon langsung</p>
+                    </div>
+                </div>
+
+                <!-- Current Consultation Only (No History) -->
+                <div class="dashboard-card mobile-card">
+                    <h3>💬 Konsultasi Aktif</h3>
+                    <div id="guest-current-consultation">
+                        <p class="empty-state">Belum ada konsultasi aktif</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Payment Modal (Same as Pasien) -->
+        <div id="payment-modal" class="modal">
+            <div class="modal-content mobile-modal">
+                <div class="modal-header">
+                    <h3>💳 Pembayaran (Mode Tamu)</h3>
+                    <button id="close-payment-modal" class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <!-- Guest Warning in Modal -->
+                    <div class="modal-guest-warning">
+                        <p>⚠️ <strong>Ingat:</strong> Riwayat tidak tersimpan. <a href="pasien.html">Daftar</a> untuk
+                            menyimpan!</p>
+                    </div>
+
+                    <!-- Step 1: Payment Method Selection -->
+                    <div id="payment-step-1" class="payment-step active">
+                        <div class="payment-info-card">
+                            <div class="payment-summary">
+                                <h4>Ringkasan Pembayaran</h4>
+                                <p><strong>Layanan:</strong> <span id="selected-service-name"></span></p>
+                                <p class="payment-amount" id="selected-service-price"></p>
+                            </div>
+
+                            <div class="payment-method">
+                                <h4>Pilih Metode Pembayaran:</h4>
+                                <div class="payment-tabs">
+                                    <div class="payment-tab active" data-method="qris">
+                                        <span class="tab-icon">📱</span>
+                                        <span>QRIS</span>
+                                    </div>
+                                    <div class="payment-tab" data-method="transfer">
+                                        <span class="tab-icon">🏦</span>
+                                        <span>Transfer Bank</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- QRIS Content -->
+                            <div id="qris-content" class="payment-content active">
+                                <div class="qris-container">
+                                    <p class="instruction-text">Scan QR code di bawah ini dengan aplikasi mobile banking
+                                        atau e-wallet Anda</p>
+                                    <div class="qris-code-wrapper">
+                                        <img src="../img/qris-bri.png" alt="QRIS Code" class="qris-code">
+                                    </div>
+                                    <div class="qris-info">
+                                        <p class="qris-name">Kawal Sehat Pian</p>
+                                        <p class="qris-merchant">Merchant ID: 1234567890</p>
+                                    </div>
+                                    <div class="payment-apps">
+                                        <p class="apps-label">Bisa dibayar dengan:</p>
+                                        <div class="apps-icons">
+                                            <span class="app-badge">GoPay</span>
+                                            <span class="app-badge">OVO</span>
+                                            <span class="app-badge">Dana</span>
+                                            <span class="app-badge">ShopeePay</span>
+                                            <span class="app-badge">LinkAja</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button id="confirm-qris-payment" class="btn btn-primary btn-block">Saya Sudah
+                                    Bayar</button>
+                            </div>
+
+                            <!-- Bank Transfer Content -->
+                            <div id="transfer-content" class="payment-content">
+                                <div class="bank-transfer-info">
+                                    <div class="bank-card">
+                                        <div class="bank-card-header">
+                                            <img src="../img/logo-brimo.png" alt="BCA" class="bank-logo-small">
+                                            <span class="bank-name">BCA</span>
+                                        </div>
+                                        <div class="bank-card-body">
+                                            <p class="account-label">Nomor Rekening</p>
+                                            <p class="account-number" id="account-number">1234567890</p>
+                                            <button id="copy-account-number" class="btn-copy">
+                                                <span class="copy-icon">📋</span>
+                                                Salin
+                                            </button>
+                                        </div>
+                                        <div class="bank-card-footer">
+                                            <p class="account-name">a.n. <strong>Bidan Pian</strong></p>
+                                        </div>
+                                    </div>
+
+                                    <div class="transfer-steps">
+                                        <h4>Cara Transfer:</h4>
+                                        <ol>
+                                            <li>Buka aplikasi mobile banking atau ATM</li>
+                                            <li>Pilih menu Transfer</li>
+                                            <li>Masukkan nomor rekening di atas</li>
+                                            <li>Masukkan nominal: <strong id="transfer-amount"></strong></li>
+                                            <li>Konfirmasi dan selesaikan pembayaran</li>
+                                            <li>Simpan bukti transfer</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                                <button id="confirm-transfer-payment" class="btn btn-primary btn-block">Saya Sudah
+                                    Transfer</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Upload Proof -->
+                    <div id="payment-step-2" class="payment-step">
+                        <div class="upload-proof-container">
+                            <h4>📤 Upload Bukti Pembayaran</h4>
+                            <p class="upload-instruction">Upload screenshot atau foto bukti pembayaran Anda</p>
+
+                            <form id="upload-proof-form">
+                                <div class="file-upload-wrapper">
+                                    <label for="payment-proof" class="file-upload-label">
+                                        <span class="upload-icon">📷</span>
+                                        <span>Pilih File</span>
+                                        <small>Maksimal 1MB (JPG, PNG)</small>
+                                    </label>
+                                    <input type="file" id="payment-proof" accept="image/*" required hidden>
+
+                                    <div id="preview-container" class="preview-container" style="display: none;">
+                                        <img id="preview-image" class="preview-image" alt="Preview">
+                                        <button type="button" id="remove-preview" class="btn-remove-preview">×</button>
+                                    </div>
+                                </div>
+
+                                <p class="upload-note">
+                                    ⚠️ Pastikan bukti pembayaran jelas dan terbaca
+                                </p>
+
+                                <button type="submit" class="btn btn-primary btn-block">Upload & Ajukan
+                                    Konsultasi</button>
+                                <button type="button" id="back-to-payment"
+                                    class="btn btn-outline btn-block">Kembali</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Room -->
+        <section id="chat-room-section" class="section">
+            <div class="container mobile-container">
+                <div class="chat-header mobile-chat-header guest-chat-header">
+                    <button id="back-to-dashboard" class="btn-back-chat">←</button>
+                    <div class="chat-info">
+                        <h3 id="chat-room-title">Chat dengan Bidan</h3>
+                        <p id="chat-room-subtitle">Mode Tamu - Tidak Tersimpan</p>
+                    </div>
+                </div>
+
+                <!-- Guest Warning in Chat -->
+                <div class="chat-warning">
+                    <p>⚠️ Percakapan ini tidak akan tersimpan. <a href="pasien.html" class="link-primary">Daftar
+                            sekarang</a> untuk menyimpan riwayat!</p>
+                </div>
+
+                <div class="chat-container mobile-chat">
+                    <div id="messages-container" class="messages-container"></div>
+                    <form id="message-form" class="message-form mobile-message-form">
+                        <input type="text" id="message-input" placeholder="Ketik pesan..." required>
+                        <button type="submit" class="btn-send">📤</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Session End Notice -->
+        <div id="session-end-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="session-end-icon">✅</div>
+                    <h2>Konsultasi Selesai</h2>
+                    <p>Terima kasih telah menggunakan layanan kami!</p>
+                    <div class="session-end-warning">
+                        <p>⚠️ Riwayat konsultasi ini <strong>tidak tersimpan</strong> karena Anda menggunakan mode tamu.
+                        </p>
+                    </div>
+                    <div class="session-end-actions">
+                        <button onclick="window.location.href='pasien.html'" class="btn btn-primary btn-block">
+                            Daftar sebagai Pasien
+                        </button>
+                        <button onclick="window.location.href='../index.html'" class="btn btn-outline btn-block">
+                            Kembali ke Beranda
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading & Toast -->
+    <div id="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <p class="loading-text">Memproses</p>
+    </div>
+    <div id="toast-notification" class="toast-notification">
+        <span id="toast-message"></span>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module" src="../js/tamu.js"></script>
+</body>
+
+</html>

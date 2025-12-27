@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pasien - Kawal Sehat Pian</title>
+    <link rel="icon" type="image/png" href="../img/logo-kawan-sehat-pian.png">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile-view.css">
+    <link rel="stylesheet" href="../css/pasien.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header id="app-header">
+        <div class="container">
+            <div class="header-brand">
+                <img src="../img/logo-kawan-sehat-pian.png" alt="Logo" class="header-logo">
+                <h1>Kawal Sehat Pian</h1>
+            </div>
+            <div id="user-info" style="display: none;">
+                <span id="user-name-display"></span>
+                <button id="logout-btn" class="btn btn-secondary">Keluar</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main -->
+    <main id="app-main">
+        <!-- Login Section -->
+        <section id="pasien-login-section" class="section active">
+            <div class="container">
+                <div class="auth-card mobile-friendly">
+                    <button type="button" onclick="window.location.href='../index.html'" class="btn-back">← Kembali ke
+                        Beranda
+                    </button>
+                    <h2>Login Pasien</h2>
+                    <form id="pasien-login-form">
+                        <div class="form-group">
+                            <label for="pasien-email">📧 Email</label>
+                            <input type="email" id="pasien-email" placeholder="nama@email.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="pasien-password">🔒 Password</label>
+                            <input type="password" id="pasien-password" placeholder="Masukkan password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-large btn-block">Login</button>
+                        <button type="button" id="show-register" class="btn btn-outline btn-block">Belum punya akun?
+                            Daftar</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Register Section -->
+        <section id="pasien-register-section" class="section">
+            <div class="container">
+                <div class="auth-card mobile-friendly">
+                    <button type="button" id="back-to-login" class="btn-back">← Kembali ke Login</button>
+                    <h2>Daftar Pasien</h2>
+                    <form id="pasien-register-form">
+                        <div class="form-group">
+                            <label for="register-name">👤 Nama Lengkap</label>
+                            <input type="text" id="register-name" placeholder="Nama lengkap Anda" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="register-email">📧 Email</label>
+                            <input type="email" id="register-email" placeholder="nama@email.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="register-dob">📅 Tanggal Lahir</label>
+                            <input type="date" id="register-dob" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="register-gender">⚧ Jenis Kelamin</label>
+                            <select id="register-gender" required>
+                                <option value="">Pilih</option>
+                                <option value="female">Perempuan</option>
+                                <option value="male">Laki-laki</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="register-password">🔒 Password</label>
+                            <input type="password" id="register-password" placeholder="Min. 6 karakter" required
+                                minlength="6">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-large btn-block">Daftar</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Patient Dashboard -->
+        <section id="pasien-dashboard-section" class="section">
+            <div class="container mobile-container">
+                <div class="mobile-header">
+                    <h2>💊 Dashboard Pasien</h2>
+                    <p>Selamat datang kembali!</p>
+                </div>
+
+                <!-- Service Selection -->
+                <div class="service-cards-mobile">
+                    <div class="service-card-mobile" data-service="chat" data-price="15000">
+                        <div class="service-icon">💬</div>
+                        <h3>Chat Konsultasi</h3>
+                        <p class="service-price">Rp 15.000</p>
+                        <p class="service-desc">Konsultasi via chat dengan bidan</p>
+                    </div>
+                    <div class="service-card-mobile" data-service="phone" data-price="35000">
+                        <div class="service-icon">📞</div>
+                        <h3>Telepon Konsultasi</h3>
+                        <p class="service-price">Rp 35.000</p>
+                        <p class="service-desc">Konsultasi via telepon langsung</p>
+                    </div>
+                </div>
+
+                <!-- Consultation History -->
+                <div class="dashboard-card mobile-card">
+                    <h3>📋 Riwayat Konsultasi</h3>
+                    <div id="pasien-consultations-list"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Payment Modal -->
+        <div id="payment-modal" class="modal">
+            <div class="modal-content mobile-modal">
+                <div class="modal-header">
+                    <h3>💳 Pembayaran</h3>
+                    <button id="close-payment-modal" class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <!-- Step 1: Payment Method Selection -->
+                    <div id="payment-step-1" class="payment-step active">
+                        <div class="payment-info-card">
+                            <div class="payment-summary">
+                                <h4>Ringkasan Pembayaran</h4>
+                                <p><strong>Layanan:</strong> <span id="selected-service-name"></span></p>
+                                <p class="payment-amount" id="selected-service-price"></p>
+                            </div>
+
+                            <div class="payment-method">
+                                <h4>Pilih Metode Pembayaran:</h4>
+                                <div class="payment-tabs">
+                                    <div class="payment-tab active" data-method="qris">
+                                        <span class="tab-icon">📱</span>
+                                        <span>QRIS</span>
+                                    </div>
+                                    <div class="payment-tab" data-method="transfer">
+                                        <span class="tab-icon">🏦</span>
+                                        <span>Transfer Bank</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- QRIS Content -->
+                            <div id="qris-content" class="payment-content active">
+                                <div class="qris-container">
+                                    <p class="instruction-text">Scan QR code di bawah ini dengan aplikasi mobile banking
+                                        atau e-wallet Anda
+                                    </p>
+                                    <div class="qris-code-wrapper">
+                                        <img src="../img/qris-sample.png" alt="QRIS Code" class="qris-code">
+                                        <div class="qris-logo">
+                                            <img src="../img/qris-logo.png" alt="QRIS" class="bank-logo">
+                                        </div>
+                                    </div>
+                                    <div class="qris-info">
+                                        <p class="qris-name">Kawal Sehat Pian</p>
+                                        <p class="qris-merchant">Merchant ID: 1234567890</p>
+                                    </div>
+                                    <div class="payment-apps">
+                                        <p class="apps-label">Bisa dibayar dengan:</p>
+                                        <div class="apps-icons">
+                                            <span class="app-badge">GoPay</span>
+                                            <span class="app-badge">OVO</span>
+                                            <span class="app-badge">Dana</span>
+                                            <span class="app-badge">ShopeePay</span>
+                                            <span class="app-badge">LinkAja</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button id="confirm-qris-payment" class="btn btn-primary btn-block">Saya Sudah
+                                    Bayar</button>
+                            </div>
+
+                            <!-- Bank Transfer Content -->
+                            <div id="transfer-content" class="payment-content">
+                                <div class="bank-transfer-info">
+                                    <div class="bank-card">
+                                        <div class="bank-card-header">
+                                            <img src="../img/bca-logo.png" alt="BCA" class="bank-logo-small">
+                                            <span class="bank-name">BCA</span>
+                                        </div>
+                                        <div class="bank-card-body">
+                                            <p class="account-label">Nomor Rekening</p>
+                                            <p class="account-number" id="account-number">1234567890</p>
+                                            <button id="copy-account-number" class="btn-copy">
+                                                <span class="copy-icon">📋</span>
+                                                Salin
+                                            </button>
+                                        </div>
+                                        <div class="bank-card-footer">
+                                            <p class="account-name">a.n. <strong>Bidan Pian</strong></p>
+                                        </div>
+                                    </div>
+
+                                    <div class="transfer-steps">
+                                        <h4>Cara Transfer:</h4>
+                                        <ol>
+                                            <li>Buka aplikasi mobile banking atau ATM</li>
+                                            <li>Pilih menu Transfer</li>
+                                            <li>Masukkan nomor rekening di atas</li>
+                                            <li>Masukkan nominal: <strong id="transfer-amount"></strong></li>
+                                            <li>Konfirmasi dan selesaikan pembayaran</li>
+                                            <li>Simpan bukti transfer</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                                <button id="confirm-transfer-payment" class="btn btn-primary btn-block">Saya Sudah
+                                    Transfer</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Upload Proof -->
+                    <div id="payment-step-2" class="payment-step">
+                        <div class="upload-proof-container">
+                            <h4>📤 Upload Bukti Pembayaran</h4>
+                            <p class="upload-instruction">Upload screenshot atau foto bukti pembayaran Anda</p>
+
+                            <form id="upload-proof-form">
+                                <div class="file-upload-wrapper">
+                                    <label for="payment-proof" class="file-upload-label">
+                                        <span class="upload-icon">📷</span>
+                                        <span>Pilih File</span>
+                                        <small>Maksimal 1MB (JPG, PNG)</small>
+                                    </label>
+                                    <input type="file" id="payment-proof" accept="image/*" required hidden>
+
+                                    <div id="preview-container" class="preview-container" style="display: none;">
+                                        <img id="preview-image" class="preview-image" alt="Preview">
+                                        <button type="button" id="remove-preview" class="btn-remove-preview">×</button>
+                                    </div>
+                                </div>
+
+                                <p class="upload-note">
+                                    ⚠️ Pastikan bukti pembayaran jelas dan terbaca
+                                </p>
+
+                                <button type="submit" class="btn btn-primary btn-block">Upload & Ajukan
+                                    Konsultasi</button>
+                                <button type="button" id="back-to-payment"
+                                    class="btn btn-outline btn-block">Kembali</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Room -->
+        <section id="chat-room-section" class="section">
+            <div class="container mobile-container">
+                <div class="chat-header mobile-chat-header">
+                    <button id="back-to-dashboard" class="btn-back-chat">←</button>
+                    <div class="chat-info">
+                        <h3 id="chat-room-title">Ruang Chat</h3>
+                        <p id="chat-room-subtitle"></p>
+                    </div>
+                </div>
+                <div class="chat-container mobile-chat">
+                    <div id="messages-container" class="messages-container"></div>
+                    <form id="message-form" class="message-form mobile-message-form">
+                        <input type="text" id="message-input" placeholder="Ketik pesan..." required>
+                        <button type="submit" class="btn-send">📤</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Loading & Toast -->
+    <div id="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <p class="loading-text">Memproses</p>
+    </div>
+    <div id="toast-notification" class="toast-notification">
+        <span id="toast-message"></span>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module" src="../js/pasien.js"></script>
+</body>
+
+</html>

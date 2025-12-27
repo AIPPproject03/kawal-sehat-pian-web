@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kawal Sehat Pian - Layanan Bidan Online</title>
+    <link rel="icon" type="image/png" href="img/logo-kawan-sehat-pian.png">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/mobile-view.css">
+</head>
+
+<body>
+    <!-- Header with Logo -->
+    <header id="app-header">
+        <div class="container">
+            <div class="header-brand">
+                <img src="img/logo-kawan-sehat-pian.png" alt="Kawal Sehat Pian Logo" class="header-logo">
+                <h1>Kawal Sehat Pian</h1>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main id="app-main">
+        <!-- Landing Page -->
+        <section id="landing-section" class="section active">
+            <div class="container">
+                <div class="welcome-card">
+                    <div class="logo-wrapper">
+                        <img src="img/logo-kawan-sehat-pian.png" alt="Kawal Sehat Pian Logo" class="logo-icon">
+                    </div>
+                    <h2>Kawal Sehat Pian</h2>
+                    <p class="tagline">Konsultasi Kesehatan dengan Bidan Profesional Terpercaya</p>
+
+                    <div class="role-selection">
+                        <h3>Pilih Jenis Akses:</h3>
+
+                        <div class="role-cards">
+                            <!-- Admin/Bidan Card -->
+                            <div class="role-card" onclick="window.location.href='pages/admin.html'">
+                                <div class="role-icon">👨‍⚕️</div>
+                                <h4>Admin (Bidan)</h4>
+                                <p>Kelola konsultasi dan layani pasien</p>
+                                <button class="btn btn-primary btn-block">Masuk sebagai Bidan</button>
+                            </div>
+
+                            <!-- Pasien Card -->
+                            <div class="role-card" onclick="window.location.href='pages/pasien.html'">
+                                <div class="role-icon">👤</div>
+                                <h4>Pasien Terdaftar</h4>
+                                <p>Konsultasi dengan riwayat tersimpan</p>
+                                <button class="btn btn-primary btn-block">Masuk sebagai Pasien</button>
+                            </div>
+
+                            <!-- Tamu Card -->
+                            <div class="role-card role-card-guest" onclick="window.location.href='pages/tamu.html'">
+                                <div class="role-icon">💬</div>
+                                <h4>Konsultasi Tamu</h4>
+                                <p>Konsultasi sekali tanpa registrasi</p>
+                                <button class="btn btn-accent btn-block">Konsultasi Cepat</button>
+                                <small class="guest-note">⚠️ Riwayat tidak tersimpan</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="features-info">
+                        <h3>✨ Layanan Kami</h3>
+                        <div class="feature-list">
+                            <div class="feature-item">
+                                <span class="feature-icon">💬</span>
+                                <div>
+                                    <strong>Chat Konsultasi</strong>
+                                    <p>Konsultasi via chat - Rp 15.000</p>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">📞</span>
+                                <div>
+                                    <strong>Telepon Konsultasi</strong>
+                                    <p>Konsultasi via telepon - Rp 35.000</p>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">🔒</span>
+                                <div>
+                                    <strong>Aman & Terpercaya</strong>
+                                    <p>Bidan profesional bersertifikat</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer id="app-footer">
+        <div class="container">
+            <p>&copy; 2024 Kawal Sehat Pian. Layanan Bidan Online Terpercaya.</p>
+        </div>
+    </footer>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <p class="loading-text">Memproses</p>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Kawal Sehat Pian</title>
+    <link rel="icon" type="image/png" href="../img/logo-kawan-sehat-pian.png">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header id="app-header">
+        <div class="container">
+            <div class="header-brand">
+                <img src="../img/logo-kawan-sehat-pian.png" alt="Logo" class="header-logo">
+                <h1>Kawal Sehat Pian - Admin</h1>
+            </div>
+            <div id="user-info" style="display: none;">
+                <span id="user-name-display"></span>
+                <button id="logout-btn" class="btn btn-secondary">Keluar</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main -->
+    <main id="app-main">
+        <!-- Login Section -->
+        <section id="admin-login-section" class="section active">
+            <div class="container">
+                <div class="auth-card">
+                    <button type="button" onclick="window.location.href='../index.html'" class="btn-back">← Kembali ke
+                        Beranda</button>
+                    <h2>Login Admin (Bidan)</h2>
+                    <form id="admin-login-form">
+                        <div class="form-group">
+                            <label for="admin-email">📧 Email</label>
+                            <input type="email" id="admin-email" placeholder="admin@kawalsehat.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="admin-password">🔒 Password</label>
+                            <input type="password" id="admin-password" placeholder="Masukkan password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-large btn-block">Login</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Admin Dashboard -->
+        <section id="admin-dashboard-section" class="section">
+            <div class="container">
+                <div class="admin-header">
+                    <h2>👨‍⚕️ Dashboard Admin</h2>
+                    <p>Kelola semua konsultasi pasien</p>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">⏳</div>
+                        <div class="stat-info">
+                            <h3 id="pending-count">0</h3>
+                            <p>Menunggu Persetujuan</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-info">
+                            <h3 id="active-count">0</h3>
+                            <p>Konsultasi Aktif</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✔️</div>
+                        <div class="stat-info">
+                            <h3 id="finished-count">0</h3>
+                            <p>Selesai Hari Ini</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pending Consultations -->
+                <div class="dashboard-card">
+                    <h3>⏳ Permintaan Konsultasi Baru</h3>
+                    <div id="pending-consultations-list"></div>
+                </div>
+
+                <!-- Active Consultations -->
+                <div class="dashboard-card">
+                    <h3>✅ Konsultasi Aktif</h3>
+                    <div id="active-consultations-list"></div>
+                </div>
+
+                <!-- Finished Consultations -->
+                <div class="dashboard-card">
+                    <h3>✔️ Konsultasi Selesai</h3>
+                    <div id="finished-consultations-list"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chat Room -->
+        <section id="chat-room-section" class="section">
+            <div class="container">
+                <div class="chat-header">
+                    <button id="back-to-dashboard" class="btn-back-chat">←</button>
+                    <div class="chat-info">
+                        <h3 id="chat-room-title">Ruang Chat</h3>
+                        <p id="chat-room-subtitle"></p>
+                    </div>
+                    <button id="finish-consultation-btn" class="btn btn-secondary">Selesai</button>
+                </div>
+
+                <div class="chat-container">
+                    <div id="messages-container" class="messages-container"></div>
+                    <form id="message-form" class="message-form">
+                        <input type="text" id="message-input" placeholder="Ketik pesan..." required>
+                        <button type="submit" class="btn btn-primary">Kirim</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Loading & Toast -->
+    <div id="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <p class="loading-text">Memproses</p>
+    </div>
+    <div id="toast-notification" class="toast-notification">
+        <span id="toast-message"></span>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module" src="../js/app.js"></script>
+</body>
+
+</html>
