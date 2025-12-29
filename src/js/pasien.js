@@ -1110,13 +1110,24 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// Handle Image Selection
+// ========================================
+// IMAGE UPLOAD - CAMERA OR GALLERY
+// ========================================
+
 const btnImage = document.getElementById("btn-image");
 const imageInput = document.getElementById("image-input");
 
 if (btnImage && imageInput) {
+  // Show options when clicking image button
   btnImage.addEventListener("click", () => {
-    imageInput.click();
+    // Check if device has camera
+    if (isMobileDevice()) {
+      showImageSourceOptions();
+    } else {
+      // Desktop: just open file picker
+      imageInput.removeAttribute("capture");
+      imageInput.click();
+    }
   });
 
   imageInput.addEventListener("change", async (e) => {
@@ -1125,11 +1136,13 @@ if (btnImage && imageInput) {
 
     if (!file.type.startsWith("image/")) {
       showNotification("File harus berupa gambar", "error");
+      imageInput.value = "";
       return;
     }
 
     if (file.size > 1024 * 1024) {
       showNotification("Ukuran gambar maksimal 1MB", "error");
+      imageInput.value = "";
       return;
     }
 
@@ -1140,6 +1153,68 @@ if (btnImage && imageInput) {
     } catch (error) {
       console.error("Error reading image:", error);
       showNotification("Gagal memuat gambar", "error");
+    }
+  });
+}
+
+// Detect mobile device
+function isMobileDevice() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
+}
+
+// Show image source options (camera or gallery)
+function showImageSourceOptions() {
+  // Create modal overlay
+  const overlay = document.createElement("div");
+  overlay.className = "image-source-overlay";
+  overlay.innerHTML = `
+    <div class="image-source-modal">
+      <h4>Pilih Sumber Gambar</h4>
+      <div class="image-source-options">
+        <button class="image-source-btn" data-source="camera">
+          <span class="source-icon">📷</span>
+          <span class="source-label">Kamera</span>
+        </button>
+        <button class="image-source-btn" data-source="gallery">
+          <span class="source-icon">🖼️</span>
+          <span class="source-label">Galeri</span>
+        </button>
+      </div>
+      <button class="btn-cancel-source">Batal</button>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  // Handle camera option
+  overlay
+    .querySelector('[data-source="camera"]')
+    .addEventListener("click", () => {
+      imageInput.setAttribute("capture", "environment"); // Use back camera
+      imageInput.click();
+      document.body.removeChild(overlay);
+    });
+
+  // Handle gallery option
+  overlay
+    .querySelector('[data-source="gallery"]')
+    .addEventListener("click", () => {
+      imageInput.removeAttribute("capture");
+      imageInput.click();
+      document.body.removeChild(overlay);
+    });
+
+  // Handle cancel
+  overlay.querySelector(".btn-cancel-source").addEventListener("click", () => {
+    document.body.removeChild(overlay);
+  });
+
+  // Close on overlay click
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) {
+      document.body.removeChild(overlay);
     }
   });
 }

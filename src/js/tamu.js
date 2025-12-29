@@ -783,13 +783,21 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// Handle Image Selection
+// ========================================
+// IMAGE UPLOAD - CAMERA OR GALLERY
+// ========================================
+
 const btnImage = document.getElementById("btn-image");
 const imageInput = document.getElementById("image-input");
 
 if (btnImage && imageInput) {
   btnImage.addEventListener("click", () => {
-    imageInput.click();
+    if (isMobileDevice()) {
+      showImageSourceOptions();
+    } else {
+      imageInput.removeAttribute("capture");
+      imageInput.click();
+    }
   });
 
   imageInput.addEventListener("change", async (e) => {
@@ -798,11 +806,13 @@ if (btnImage && imageInput) {
 
     if (!file.type.startsWith("image/")) {
       showNotification("File harus berupa gambar", "error");
+      imageInput.value = "";
       return;
     }
 
     if (file.size > 1024 * 1024) {
       showNotification("Ukuran gambar maksimal 1MB", "error");
+      imageInput.value = "";
       return;
     }
 
@@ -817,59 +827,57 @@ if (btnImage && imageInput) {
   });
 }
 
-// Show Image Preview
-function showImagePreview(base64, fileName) {
-  const container = document.getElementById("image-preview-container");
-  if (!container) return;
+function isMobileDevice() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
+}
 
-  container.innerHTML = `
-    <div class="image-preview-wrapper">
-      <img src="${base64}" alt="${fileName}" class="image-preview-thumb">
-      <button type="button" class="btn-remove-image-preview" onclick="removeImagePreview()">×</button>
+function showImageSourceOptions() {
+  const overlay = document.createElement("div");
+  overlay.className = "image-source-overlay";
+  overlay.innerHTML = `
+    <div class="image-source-modal">
+      <h4>Pilih Sumber Gambar</h4>
+      <div class="image-source-options">
+        <button class="image-source-btn" data-source="camera">
+          <span class="source-icon">📷</span>
+          <span class="source-label">Kamera</span>
+        </button>
+        <button class="image-source-btn" data-source="gallery">
+          <span class="source-icon">🖼️</span>
+          <span class="source-label">Galeri</span>
+        </button>
+      </div>
+      <button class="btn-cancel-source">Batal</button>
     </div>
   `;
-  container.style.display = "flex";
-}
 
-// Remove Image Preview
-function removeImagePreview() {
-  const container = document.getElementById("image-preview-container");
-  const imageInput = document.getElementById("image-input");
+  document.body.appendChild(overlay);
 
-  if (container) container.style.display = "none";
-  if (imageInput) imageInput.value = "";
+  overlay
+    .querySelector('[data-source="camera"]')
+    .addEventListener("click", () => {
+      imageInput.setAttribute("capture", "environment");
+      imageInput.click();
+      document.body.removeChild(overlay);
+    });
 
-  selectedImage = null;
-  selectedImageFile = null;
-}
+  overlay
+    .querySelector('[data-source="gallery"]')
+    .addEventListener("click", () => {
+      imageInput.removeAttribute("capture");
+      imageInput.click();
+      document.body.removeChild(overlay);
+    });
 
-window.removeImagePreview = removeImagePreview;
-
-// Open Image Modal
-function openImageModal(imageUrl) {
-  const modal = document.getElementById("image-modal");
-  const modalImg = document.getElementById("image-modal-content");
-
-  if (modal && modalImg) {
-    modalImg.src = imageUrl;
-    modal.classList.add("active");
-  }
-}
-
-window.openImageModal = openImageModal;
-
-// Close Image Modal
-const btnCloseImageModal = document.getElementById("btn-close-image-modal");
-const imageModal = document.getElementById("image-modal");
-
-if (btnCloseImageModal && imageModal) {
-  btnCloseImageModal.addEventListener("click", () => {
-    imageModal.classList.remove("active");
+  overlay.querySelector(".btn-cancel-source").addEventListener("click", () => {
+    document.body.removeChild(overlay);
   });
 
-  imageModal.addEventListener("click", (e) => {
-    if (e.target === imageModal) {
-      imageModal.classList.remove("active");
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) {
+      document.body.removeChild(overlay);
     }
   });
 }
