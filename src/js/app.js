@@ -947,7 +947,7 @@ function loadMessages(consultationId) {
   );
 }
 
-// Create Message Element - SIMPLE
+// Create Message Element - SIMPLE - FIXED
 function createMessageElement(message) {
   const div = document.createElement("div");
   div.style.animation = "slideIn 0.3s ease";
@@ -980,7 +980,8 @@ function createMessageElement(message) {
            alt="Image" 
            class="message-image" 
            onclick="openImageModal('${message.imageUrl}')"
-           loading="lazy">
+           loading="lazy"
+           style="cursor: pointer;">
     </div>
   `
     : "";
@@ -1008,18 +1009,25 @@ function createMessageElement(message) {
   return div;
 }
 
-// Send Message - ENHANCED
+// SEND MESSAGE - FIXED
 const messageForm = document.getElementById("message-form");
 if (messageForm) {
   messageForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const messageInput = document.getElementById("message-input");
-    if (!messageInput) return;
+    if (!messageInput) {
+      console.error("Message input not found");
+      return;
+    }
 
     const text = messageInput.value.trim();
 
-    if (!text && !selectedImage) return;
+    // Validation
+    if (!text && !selectedImage) {
+      console.log("No text or image to send");
+      return;
+    }
 
     if (!currentConsultationId) {
       showNotification("Tidak ada konsultasi aktif", "error");
@@ -1029,6 +1037,13 @@ if (messageForm) {
     if (messageInput.disabled) {
       showNotification("Konsultasi telah selesai", "warning");
       return;
+    }
+
+    // Show loading state
+    const sendBtn = messageForm.querySelector(".btn-send");
+    if (sendBtn) {
+      sendBtn.disabled = true;
+      sendBtn.style.opacity = "0.6";
     }
 
     try {
@@ -1048,21 +1063,42 @@ if (messageForm) {
         messageData.hasImage = true;
       }
 
+      console.log("Sending message...", messageData);
+
+      // Send message to Firestore
       await addDoc(
         collection(db, "consultations", currentConsultationId, "messages"),
         messageData
       );
 
+      console.log("✓ Message sent successfully");
+
+      // Clear input AFTER successful send
       messageInput.value = "";
+
+      // Remove image preview
       removeImagePreview();
 
       // Close emoji picker
-      if (emojiPicker) emojiPicker.style.display = "none";
+      const emojiPicker = document.getElementById("emoji-picker");
+      if (emojiPicker) {
+        emojiPicker.style.display = "none";
+      }
 
-      console.log("✓ Message sent");
+      // Reset button state
+      if (sendBtn) {
+        sendBtn.disabled = false;
+        sendBtn.style.opacity = "1";
+      }
     } catch (error) {
       console.error("✗ Send message error:", error);
-      showNotification("Gagal mengirim pesan", "error");
+      showNotification("Gagal mengirim pesan: " + error.message, "error");
+
+      // Reset button state on error
+      if (sendBtn) {
+        sendBtn.disabled = false;
+        sendBtn.style.opacity = "1";
+      }
     }
   });
 }
@@ -1189,16 +1225,6 @@ function escapeHtml(text) {
     "'": "&#039;",
   };
   return text.replace(/[&<>"']/g, (m) => map[m]);
-}
-
-// Utility: Convert File to Base64
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
 }
 
 // ========================================
@@ -1549,9 +1575,6 @@ const emojis = [
   "🌈",
 ];
 
-let selectedImage = null;
-let selectedImageFile = null;
-
 // Initialize Emoji Picker
 function initializeEmojiPicker() {
   const emojiGrid = document.getElementById("emoji-grid");
@@ -1614,14 +1637,20 @@ document.addEventListener("click", (e) => {
 });
 
 // ========================================
-// IMAGE UPLOAD - CAMERA OR GALLERY
+// IMAGE UPLOAD - CAMERA OR GALLERY - FIXED
 // ========================================
+
+let selectedImage = null;
+let selectedImageFile = null;
 
 const btnImage = document.getElementById("btn-image");
 const imageInput = document.getElementById("image-input");
 
 if (btnImage && imageInput) {
+  console.log("✓ Image upload handlers found");
+
   btnImage.addEventListener("click", () => {
+    console.log("Image button clicked");
     if (isMobileDevice()) {
       showImageSourceOptions();
     } else {
@@ -1633,6 +1662,8 @@ if (btnImage && imageInput) {
   imageInput.addEventListener("change", async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    console.log("File selected:", file.name, file.type, file.size);
 
     if (!file.type.startsWith("image/")) {
       showNotification("File harus berupa gambar", "error");
@@ -1649,6 +1680,7 @@ if (btnImage && imageInput) {
     try {
       selectedImageFile = file;
       selectedImage = await fileToBase64(file);
+      console.log("✓ Image converted to base64");
       showImagePreview(selectedImage, file.name);
     } catch (error) {
       console.error("Error reading image:", error);
@@ -1712,19 +1744,47 @@ function showImageSourceOptions() {
   });
 }
 
-// Close Image Modal
-const btnCloseImageModal = document.getElementById("btn-close-image-modal");
-const imageModal = document.getElementById("image-modal");
+// Show Image Preview
+function showImagePreview(base64, fileName) {
+  const container = document.getElementById("image-preview-container");
+  if (!container) {
+    console.error("Image preview container not found");
+    return;
+  }
 
-if (btnCloseImageModal && imageModal) {
-  btnCloseImageModal.addEventListener("click", () => {
-    imageModal.classList.remove("active");
-  });
+  container.innerHTML = `
+    <div class="image-preview-wrapper">
+      <img src="${base64}" alt="${fileName}" class="image-preview-thumb">
+      <button type="button" class="btn-remove-image-preview" onclick="removeImagePreview()">×</button>
+    </div>
+  `;
+  container.style.display = "flex";
+  console.log("✓ Image preview shown");
+}
 
-  imageModal.addEventListener("click", (e) => {
-    if (e.target === imageModal) {
-      imageModal.classList.remove("active");
-    }
+// Remove Image Preview
+function removeImagePreview() {
+  const container = document.getElementById("image-preview-container");
+  const imageInput = document.getElementById("image-input");
+
+  if (container) container.style.display = "none";
+  if (imageInput) imageInput.value = "";
+
+  selectedImage = null;
+  selectedImageFile = null;
+  console.log("✓ Image preview removed");
+}
+
+// Make function global
+window.removeImagePreview = removeImagePreview;
+
+// File to Base64 conversion
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
   });
 }
 
@@ -1813,6 +1873,71 @@ document.addEventListener("keydown", (e) => {
     const modal = document.getElementById("payment-proof-modal");
     if (modal && modal.classList.contains("active")) {
       closePaymentProofModal();
+    }
+  }
+});
+
+// ========================================
+// IMAGE MODAL FOR CHAT MESSAGES - ADMIN - FIXED
+// ========================================
+
+// Open Image Modal for Chat Messages
+function openImageModal(imageUrl) {
+  console.log("Opening image modal:", imageUrl);
+
+  const modal = document.getElementById("image-modal");
+  const modalImg = document.getElementById("image-modal-content");
+
+  if (!modal || !modalImg) {
+    console.error("Image modal elements not found");
+    console.log("Modal:", modal);
+    console.log("Modal Image:", modalImg);
+    return;
+  }
+
+  modalImg.src = imageUrl;
+  modal.classList.add("active");
+  document.body.style.overflow = "hidden";
+
+  console.log("✓ Image modal opened");
+}
+
+// Make function global for onclick
+window.openImageModal = openImageModal;
+
+// Close Image Modal
+const btnCloseImageModal = document.getElementById("btn-close-image-modal");
+const imageModal = document.getElementById("image-modal");
+
+if (btnCloseImageModal && imageModal) {
+  console.log("✓ Image modal close handlers attached");
+
+  btnCloseImageModal.addEventListener("click", () => {
+    imageModal.classList.remove("active");
+    document.body.style.overflow = "";
+    console.log("Image modal closed via button");
+  });
+
+  // Close on overlay click
+  imageModal.addEventListener("click", (e) => {
+    if (e.target === imageModal) {
+      imageModal.classList.remove("active");
+      document.body.style.overflow = "";
+      console.log("Image modal closed via overlay");
+    }
+  });
+} else {
+  console.error("Image modal elements not found for close handlers");
+}
+
+// ESC key to close image modal
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    const imageModal = document.getElementById("image-modal");
+    if (imageModal && imageModal.classList.contains("active")) {
+      imageModal.classList.remove("active");
+      document.body.style.overflow = "";
+      console.log("Image modal closed via ESC");
     }
   }
 });
