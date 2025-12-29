@@ -622,7 +622,7 @@ function loadMessages(consultationId) {
   );
 }
 
-// Create Message Element - ENHANCED
+// Create Message Element - SIMPLE WITH LINE BREAKS
 function createMessageElement(message) {
   const div = document.createElement("div");
   div.style.animation = "fadeIn 0.3s ease";
@@ -652,7 +652,7 @@ function createMessageElement(message) {
     ? `
     <div class="message-image-container">
       <img src="${message.imageUrl}" 
-           alt="Image" 
+           alt="Gambar" 
            class="message-image" 
            onclick="openImageModal('${message.imageUrl}')"
            loading="lazy">
@@ -690,7 +690,7 @@ if (messageForm) {
     e.preventDefault();
 
     const messageInput = document.getElementById("message-input");
-    const text = messageInput.value.trim();
+    const text = messageInput.value.trim(); // GET PLAIN TEXT WITH LINE BREAKS
 
     if (!text && !selectedImage) return;
 
@@ -705,35 +705,25 @@ if (messageForm) {
     }
 
     try {
-      const messageData = {
-        senderId: currentUser.uid,
-        senderName: currentUserData.name || currentUserData.email || "Pasien",
-        timestamp: serverTimestamp(),
-        isSystemMessage: false,
-      };
-
-      if (text) {
-        messageData.text = text;
-      }
-
-      if (selectedImage) {
-        messageData.imageUrl = selectedImage;
-        messageData.hasImage = true;
-      }
-
       await addDoc(
         collection(db, "consultations", currentConsultationId, "messages"),
-        messageData
+        {
+          text: text, // SEND WITH LINE BREAKS PRESERVED
+          senderId: currentUser.uid,
+          senderName: currentUserData.name || "Pasien",
+          imageUrl: selectedImage || null,
+          timestamp: serverTimestamp(),
+        }
       );
 
       messageInput.value = "";
-      removeImagePreview();
+      selectedImage = null;
+      selectedImageFile = null;
 
-      if (emojiPicker) emojiPicker.style.display = "none";
-
-      console.log("✓ Message sent");
+      const imagePreview = document.getElementById("image-preview-container");
+      if (imagePreview) imagePreview.style.display = "none";
     } catch (error) {
-      console.error("✗ Send message error:", error);
+      console.error("Send message error:", error);
       showNotification("Gagal mengirim pesan", "error");
     }
   });

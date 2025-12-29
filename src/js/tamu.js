@@ -1,4 +1,5 @@
 /* filepath: src/js/tamu.js */
+/* filepath: src/js/tamu.js */
 // Firebase v9 Modular SDK imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import {
@@ -464,11 +465,41 @@ function loadMessages(consultationId) {
   });
 }
 
-// Create Message Element
+// Create Message Element - SIMPLE
 function createMessageElement(message) {
   const div = document.createElement("div");
   const isOwnMessage = message.senderId === currentUser.uid;
+  const isSystemMessage = message.isSystemMessage;
+
+  if (isSystemMessage) {
+    div.className = "message message-system";
+    div.innerHTML = `
+      <div class="message-text system-message">${escapeHtml(message.text)}</div>
+      <span class="message-time">${
+        message.timestamp
+          ? new Date(message.timestamp.toDate()).toLocaleTimeString("id-ID", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : "Mengirim..."
+      }</span>
+    `;
+    return div;
+  }
+
   div.className = `message ${isOwnMessage ? "message-own" : "message-other"}`;
+
+  const imageHtml = message.imageUrl
+    ? `
+    <div class="message-image-container">
+      <img src="${message.imageUrl}" 
+           alt="Gambar" 
+           class="message-image" 
+           onclick="openImageModal('${message.imageUrl}')"
+           loading="lazy">
+    </div>
+  `
+    : "";
 
   div.innerHTML = `
     <div class="message-header">
@@ -479,7 +510,12 @@ function createMessageElement(message) {
           : "Mengirim..."
       }</span>
     </div>
-    <div class="message-text">${escapeHtml(message.text)}</div>
+    ${
+      message.text
+        ? `<div class="message-text">${escapeHtml(message.text)}</div>`
+        : ""
+    }
+    ${imageHtml}
   `;
 
   return div;

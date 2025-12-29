@@ -947,7 +947,7 @@ function loadMessages(consultationId) {
   );
 }
 
-// Create Message Element - ENHANCED
+// Create Message Element - SIMPLE
 function createMessageElement(message) {
   const div = document.createElement("div");
   div.style.animation = "slideIn 0.3s ease";
