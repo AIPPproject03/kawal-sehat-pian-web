@@ -216,95 +216,116 @@ if (copyAccountBtn) {
   });
 }
 
-// File Upload Preview
+// File Upload Preview - WITH COMPRESSION
 const paymentProofInput = document.getElementById("payment-proof");
 if (paymentProofInput) {
-  paymentProofInput.addEventListener("change", function (e) {
+  paymentProofInput.addEventListener("change", async function (e) {
     const file = e.target.files[0];
-    if (file) {
+    if (!file) return;
+
+    // Check file type
+    if (!file.type.startsWith("image/")) {
+      showNotification("File harus berupa gambar", "error");
+      this.value = "";
+      return;
+    }
+
+    try {
+      // Auto compress if larger than 1MB
+      let processedFile = file;
+
       if (file.size > 1024 * 1024) {
-        showNotification("Ukuran file terlalu besar. Maksimal 1MB", "error");
-        this.value = "";
-        return;
+        showNotification("🔄 Mengompres gambar...", "info");
+        processedFile = await compressImage(file, 0.9);
+        console.log(
+          `Original: ${(file.size / 1024).toFixed(2)} KB → Compressed: ${(
+            processedFile.size / 1024
+          ).toFixed(2)} KB`
+        );
       }
 
+      // Show preview
       const reader = new FileReader();
       reader.onload = function (e) {
         const previewContainer = document.getElementById("preview-container");
         const previewImage = document.getElementById("preview-image");
         const uploadLabel = document.querySelector(".file-upload-label");
 
-        previewImage.src = e.target.result;
-        previewContainer.style.display = "block";
-        uploadLabel.style.display = "none";
+        if (previewImage && previewContainer && uploadLabel) {
+          previewImage.src = e.target.result;
+          previewContainer.style.display = "block";
+          uploadLabel.style.display = "none";
+        }
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(processedFile);
+
+      // Store processed file for submit
+      paymentProofInput.dataset.processedFile = await fileToBase64(
+        processedFile
+      );
+    } catch (error) {
+      console.error("Error processing image:", error);
+      showNotification("Gagal memproses gambar", "error");
+      this.value = "";
     }
   });
 }
 
-// Remove Preview
-const removePreviewBtn = document.getElementById("remove-preview");
-if (removePreviewBtn) {
-  removePreviewBtn.addEventListener("click", () => {
-    const previewContainer = document.getElementById("preview-container");
-    const uploadLabel = document.querySelector(".file-upload-label");
-    const fileInput = document.getElementById("payment-proof");
-
-    previewContainer.style.display = "none";
-    uploadLabel.style.display = "flex";
-    fileInput.value = "";
-  });
-}
-
-// Upload Proof Form Submit (Tamu - Temporary, not saved in history)
+// Upload Proof Form Submit - FIXED
 const uploadProofForm = document.getElementById("upload-proof-form");
 if (uploadProofForm) {
   uploadProofForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     showLoading();
 
-    const paymentProofFile = document.getElementById("payment-proof").files[0];
+    const paymentProofInput = document.getElementById("payment-proof");
 
-    if (!paymentProofFile) {
+    if (!paymentProofInput || !paymentProofInput.files[0]) {
       showNotification("Pilih file bukti pembayaran", "error");
       hideLoading();
       return;
     }
 
-    if (paymentProofFile.size > 1024 * 1024) {
-      showNotification("Ukuran file terlalu besar. Maksimal 1MB", "error");
-      hideLoading();
-      return;
-    }
-
     try {
-      const paymentProofBase64 = await fileToBase64(paymentProofFile);
+      // Use already processed file from dataset
+      let paymentProofBase64 = paymentProofInput.dataset.processedFile;
 
-      // Create temporary consultation (will be auto-deleted or marked as guest)
-      const consultationRef = await addDoc(collection(db, "consultations"), {
+      // If not processed yet (shouldn't happen), process now
+      if (!paymentProofBase64) {
+        const file = paymentProofInput.files[0];
+        let processedFile = file;
+
+        if (file.size > 1024 * 1024) {
+          showNotification("🔄 Mengompres gambar...", "info");
+          processedFile = await compressImage(file, 0.9);
+        }
+
+        paymentProofBase64 = await fileToBase64(processedFile);
+      }
+
+      await addDoc(collection(db, "consultations"), {
         patientId: currentUser.uid,
-        patientName: "Tamu",
+        patientName: currentUserData.name || "Tamu",
         serviceType: selectedService,
         price: selectedPrice,
         status: "pending",
         paymentProofUrl: paymentProofBase64,
-        paymentProofType: paymentProofFile.type,
-        isGuest: true, // Mark as guest consultation
+        paymentProofType: "image/jpeg",
         createdAt: serverTimestamp(),
       });
 
-      currentConsultationId = consultationRef.id;
-
       showNotification(
-        "⚠️ Konsultasi tamu diajukan! Data tidak akan tersimpan setelah selesai.",
-        "warning"
+        "Konsultasi berhasil diajukan! Menunggu persetujuan.",
+        "success"
       );
 
       document.getElementById("payment-modal").classList.remove("active");
       document.getElementById("upload-proof-form").reset();
       document.getElementById("preview-container").style.display = "none";
       document.querySelector(".file-upload-label").style.display = "flex";
+
+      // Clear processed file
+      delete paymentProofInput.dataset.processedFile;
 
       document
         .querySelectorAll(".service-card-mobile")
@@ -810,19 +831,27 @@ if (btnImage && imageInput) {
       return;
     }
 
-    if (file.size > 1024 * 1024) {
-      showNotification("Ukuran gambar maksimal 1MB", "error");
-      imageInput.value = "";
-      return;
-    }
-
     try {
-      selectedImageFile = file;
-      selectedImage = await fileToBase64(file);
-      showImagePreview(selectedImage, file.name);
+      // Compress image if larger than 1MB
+      let processedFile = file;
+
+      if (file.size > 1024 * 1024) {
+        showNotification("🔄 Mengompres gambar...", "info");
+        processedFile = await compressImage(file, 0.9);
+        console.log(
+          `Original: ${(file.size / 1024).toFixed(2)} KB → Compressed: ${(
+            processedFile.size / 1024
+          ).toFixed(2)} KB`
+        );
+      }
+
+      selectedImageFile = processedFile;
+      selectedImage = await fileToBase64(processedFile);
+      showImagePreview(selectedImage, processedFile.name);
     } catch (error) {
-      console.error("Error reading image:", error);
-      showNotification("Gagal memuat gambar", "error");
+      console.error("Error processing image:", error);
+      showNotification("Gagal memproses gambar", "error");
+      imageInput.value = "";
     }
   });
 }
@@ -926,5 +955,84 @@ if (messageInput) {
       currentValue.substring(0, start) + text + currentValue.substring(end);
     this.selectionStart = this.selectionEnd = start + text.length;
     this.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+}
+
+// ========================================
+// IMAGE COMPRESSION UTILITY
+// ========================================
+
+// Compress image to target size (default 1MB)
+async function compressImage(file, maxSizeMB = 1, maxWidthOrHeight = 1920) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const img = new Image();
+
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidthOrHeight) {
+            height = (height * maxWidthOrHeight) / width;
+            width = maxWidthOrHeight;
+          }
+        } else {
+          if (height > maxWidthOrHeight) {
+            width = (width * maxWidthOrHeight) / height;
+            height = maxWidthOrHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        let quality = 0.9;
+        const targetSize = maxSizeMB * 1024 * 1024;
+
+        const tryCompress = (currentQuality) => {
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(new Error("Compression failed"));
+                return;
+              }
+
+              console.log(
+                `Compressed at quality ${currentQuality}: ${(
+                  blob.size / 1024
+                ).toFixed(2)} KB`
+              );
+
+              if (blob.size > targetSize && currentQuality > 0.1) {
+                tryCompress(currentQuality - 0.1);
+              } else {
+                const compressedFile = new File([blob], file.name, {
+                  type: "image/jpeg",
+                  lastModified: Date.now(),
+                });
+                resolve(compressedFile);
+              }
+            },
+            "image/jpeg",
+            currentQuality
+          );
+        };
+
+        tryCompress(quality);
+      };
+
+      img.onerror = () => reject(new Error("Failed to load image"));
+      img.src = e.target.result;
+    };
+
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
   });
 }

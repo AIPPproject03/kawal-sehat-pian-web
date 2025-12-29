@@ -382,14 +382,22 @@ if (uploadProofForm) {
 
     const file = paymentProofFile.files[0];
 
-    if (file.size > 1024 * 1024) {
-      showNotification("Ukuran file terlalu besar. Maksimal 1MB", "error");
-      hideLoading();
-      return;
-    }
-
     try {
-      const paymentProofBase64 = await fileToBase64(file);
+      // Compress image if larger than 1MB
+      let processedFile = file;
+
+      if (file.size > 1024 * 1024) {
+        showNotification("🔄 Mengompres gambar...", "info");
+        processedFile = await compressImage(file, 0.9); // Target < 1MB
+        console.log(
+          `Original: ${(file.size / 1024).toFixed(2)} KB → Compressed: ${(
+            processedFile.size / 1024
+          ).toFixed(2)} KB`
+        );
+      }
+
+      // Convert to base64
+      const paymentProofBase64 = await fileToBase64(processedFile);
 
       await addDoc(collection(db, "consultations"), {
         patientId: currentUser.uid,
@@ -398,7 +406,7 @@ if (uploadProofForm) {
         price: selectedPrice,
         status: "pending",
         paymentProofUrl: paymentProofBase64,
-        paymentProofType: file.type,
+        paymentProofType: processedFile.type,
         createdAt: serverTimestamp(),
       });
 
@@ -418,14 +426,16 @@ if (uploadProofForm) {
       if (uploadLabel) uploadLabel.style.display = "flex";
 
       document
-        .querySelectorAll(".service-card-mobile")
-        .forEach((c) => c.classList.remove("selected"));
+        .querySelectorAll(".service-card")
+        .forEach((card) => card.classList.remove("selected"));
 
-      loadPatientDashboard();
+      loadPendingConsultations();
+      loadActiveConsultations();
+      loadFinishedConsultations();
     } catch (error) {
-      console.error("Create consultation error:", error);
+      console.error("Upload proof error:", error);
       showNotification(
-        "Gagal mengajukan konsultasi: " + error.message,
+        "Gagal mengupload bukti pembayaran: " + error.message,
         "error"
       );
     }
@@ -1671,20 +1681,28 @@ if (btnImage && imageInput) {
       return;
     }
 
-    if (file.size > 1024 * 1024) {
-      showNotification("Ukuran gambar maksimal 1MB", "error");
-      imageInput.value = "";
-      return;
-    }
-
     try {
-      selectedImageFile = file;
-      selectedImage = await fileToBase64(file);
+      // Compress image if larger than 1MB
+      let processedFile = file;
+
+      if (file.size > 1024 * 1024) {
+        showNotification("🔄 Mengompres gambar...", "info");
+        processedFile = await compressImage(file, 0.9); // Target < 1MB
+        console.log(
+          `Original: ${(file.size / 1024).toFixed(2)} KB → Compressed: ${(
+            processedFile.size / 1024
+          ).toFixed(2)} KB`
+        );
+      }
+
+      selectedImageFile = processedFile;
+      selectedImage = await fileToBase64(processedFile);
       console.log("✓ Image converted to base64");
-      showImagePreview(selectedImage, file.name);
+      showImagePreview(selectedImage, processedFile.name);
     } catch (error) {
-      console.error("Error reading image:", error);
-      showNotification("Gagal memuat gambar", "error");
+      console.error("Error processing image:", error);
+      showNotification("Gagal memproses gambar", "error");
+      imageInput.value = "";
     }
   });
 }
@@ -1986,5 +2004,88 @@ if (messageInput) {
       currentValue.substring(0, start) + text + currentValue.substring(end);
     this.selectionStart = this.selectionEnd = start + text.length;
     this.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+}
+
+// ========================================
+// IMAGE COMPRESSION UTILITY
+// ========================================
+
+// Compress image to target size (default 1MB)
+async function compressImage(file, maxSizeMB = 1, maxWidthOrHeight = 1920) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const img = new Image();
+
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+
+        // Calculate new dimensions (maintain aspect ratio)
+        if (width > height) {
+          if (width > maxWidthOrHeight) {
+            height = (height * maxWidthOrHeight) / width;
+            width = maxWidthOrHeight;
+          }
+        } else {
+          if (height > maxWidthOrHeight) {
+            width = (width * maxWidthOrHeight) / height;
+            height = maxWidthOrHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Try different quality levels to get under maxSizeMB
+        let quality = 0.9;
+        const targetSize = maxSizeMB * 1024 * 1024;
+
+        const tryCompress = (currentQuality) => {
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(new Error("Compression failed"));
+                return;
+              }
+
+              console.log(
+                `Compressed at quality ${currentQuality}: ${(
+                  blob.size / 1024
+                ).toFixed(2)} KB`
+              );
+
+              // If still too large and quality can be reduced further
+              if (blob.size > targetSize && currentQuality > 0.1) {
+                tryCompress(currentQuality - 0.1);
+              } else {
+                // Create File object from blob
+                const compressedFile = new File([blob], file.name, {
+                  type: "image/jpeg",
+                  lastModified: Date.now(),
+                });
+                resolve(compressedFile);
+              }
+            },
+            "image/jpeg",
+            currentQuality
+          );
+        };
+
+        tryCompress(quality);
+      };
+
+      img.onerror = () => reject(new Error("Failed to load image"));
+      img.src = e.target.result;
+    };
+
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
   });
 }
