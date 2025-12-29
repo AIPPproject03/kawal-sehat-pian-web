@@ -166,10 +166,7 @@
                                         atau e-wallet Anda
                                     </p>
                                     <div class="qris-code-wrapper">
-                                        <img src="../img/qris-sample.png" alt="QRIS Code" class="qris-code">
-                                        <div class="qris-logo">
-                                            <img src="../img/qris-logo.png" alt="QRIS" class="bank-logo">
-                                        </div>
+                                        <img src="../img/qris-bri.png" alt="QRIS Code" class="qris-code">
                                     </div>
                                     <div class="qris-info">
                                         <p class="qris-name">Kawal Sehat Pian</p>
@@ -260,6 +257,28 @@
                                     class="btn btn-outline btn-block">Kembali</button>
                             </form>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Proof Modal -->
+        <div id="payment-proof-modal" class="payment-modal" role="dialog" aria-modal="true">
+            <div class="payment-modal-overlay"></div>
+            <div class="payment-modal-content">
+                <button id="close-payment-proof" class="payment-modal-close" aria-label="Tutup">×</button>
+                <div class="payment-modal-header">
+                    <h3>📷 Bukti Pembayaran</h3>
+                </div>
+                <div class="payment-modal-body">
+                    <img id="payment-proof-image" class="payment-proof-img" alt="Bukti Pembayaran">
+                    <div class="payment-modal-actions">
+                        <button id="download-payment-proof" class="btn btn-primary">
+                            <span>💾</span> Download
+                        </button>
+                        <button id="close-payment-proof-btn" class="btn btn-secondary">
+                            Tutup
+                        </button>
                     </div>
                 </div>
             </div>

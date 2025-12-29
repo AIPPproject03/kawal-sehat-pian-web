@@ -690,8 +690,9 @@ function createConsultationCard(id, consultation, userType) {
           src="${consultation.paymentProofUrl}" 
           alt="Bukti Pembayaran" 
           class="payment-proof-preview" 
-          onclick="window.open('${consultation.paymentProofUrl}', '_blank')"
+          onclick="openPaymentProofModal('${consultation.paymentProofUrl}')"
           loading="lazy"
+          style="cursor: pointer;"
         >
       </div>
     `
@@ -1706,3 +1707,92 @@ if (btnCloseImageModal && imageModal) {
     }
   });
 }
+
+// ========================================
+// PAYMENT PROOF MODAL VIEWER
+// ========================================
+
+// Open Payment Proof Modal
+function openPaymentProofModal(imageUrl) {
+  const modal = document.getElementById("payment-proof-modal");
+  const img = document.getElementById("payment-proof-image");
+
+  if (!modal || !img) return;
+
+  img.src = imageUrl;
+  modal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+// Close Payment Proof Modal
+function closePaymentProofModal() {
+  const modal = document.getElementById("payment-proof-modal");
+
+  if (!modal) return;
+
+  modal.classList.remove("active");
+  document.body.style.overflow = "";
+}
+
+// Make function global
+window.openPaymentProofModal = openPaymentProofModal;
+
+// Close button
+const closePaymentProofBtn = document.getElementById("close-payment-proof");
+const closePaymentProofBtnSecondary = document.getElementById(
+  "close-payment-proof-btn"
+);
+
+if (closePaymentProofBtn) {
+  closePaymentProofBtn.addEventListener("click", closePaymentProofModal);
+}
+
+if (closePaymentProofBtnSecondary) {
+  closePaymentProofBtnSecondary.addEventListener(
+    "click",
+    closePaymentProofModal
+  );
+}
+
+// Close on overlay click
+const paymentModal = document.getElementById("payment-proof-modal");
+if (paymentModal) {
+  paymentModal.addEventListener("click", (e) => {
+    if (
+      e.target === paymentModal ||
+      e.target.classList.contains("payment-modal-overlay")
+    ) {
+      closePaymentProofModal();
+    }
+  });
+}
+
+// Download button
+const downloadPaymentProofBtn = document.getElementById(
+  "download-payment-proof"
+);
+if (downloadPaymentProofBtn) {
+  downloadPaymentProofBtn.addEventListener("click", () => {
+    const img = document.getElementById("payment-proof-image");
+    if (!img || !img.src) return;
+
+    const link = document.createElement("a");
+    link.href = img.src;
+    link.download = `bukti-pembayaran-${Date.now()}.jpg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    showNotification("Bukti pembayaran berhasil didownload!", "success");
+  });
+}
+
+// ESC key to close
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    const modal = document.getElementById("payment-proof-modal");
+    if (modal && modal.classList.contains("active")) {
+      closePaymentProofModal();
+    }
+  }
+});

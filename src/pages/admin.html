@@ -177,6 +177,28 @@
             <button id="btn-close-image-modal" class="btn-close-image-modal" aria-label="Tutup">×</button>
             <img id="image-modal-content" class="image-modal-content" alt="Full Image">
         </div>
+
+        <!-- Payment Proof Modal -->
+        <div id="payment-proof-modal" class="payment-modal" role="dialog" aria-modal="true">
+            <div class="payment-modal-overlay"></div>
+            <div class="payment-modal-content">
+                <button id="close-payment-proof" class="payment-modal-close" aria-label="Tutup">×</button>
+                <div class="payment-modal-header">
+                    <h3>📷 Bukti Pembayaran</h3>
+                </div>
+                <div class="payment-modal-body">
+                    <img id="payment-proof-image" class="payment-proof-img" alt="Bukti Pembayaran">
+                    <div class="payment-modal-actions">
+                        <button id="download-payment-proof" class="btn btn-primary">
+                            <span>💾</span> Download
+                        </button>
+                        <button id="close-payment-proof-btn" class="btn btn-secondary">
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <!-- Loading & Toast -->
