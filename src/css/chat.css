@@ -2158,6 +2158,16 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
+.mobile-chat-header .chat-info h3 {
+  font-size: 1.1rem;
+  margin: 0 0 0.25rem 0;
+}
+
+.mobile-chat-header .chat-info p {
+  font-size: 0.85rem;
+  opacity: 0.95;
+}
+
 /* Pasien Chat Container */
 .mobile-chat {
   border-radius: 0;
@@ -2173,6 +2183,13 @@
   position: sticky;
   bottom: 0;
   z-index: 100;
+  width: 100%; /* FULL WIDTH */
+  max-width: none; /* REMOVE MAX WIDTH */
+}
+
+.mobile-message-form .message-input-wrapper {
+  width: 100%; /* FULL WIDTH */
+  max-width: none; /* REMOVE MAX WIDTH */
 }
 
 .mobile-message-form .message-input-container {
@@ -2289,6 +2306,92 @@
   }
 }
 
+/* DESKTOP PASIEN CHAT - FULL WIDTH */
+@media (min-width: 769px) {
+  .mobile-chat-header {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .mobile-chat-header .chat-info h3 {
+    font-size: 1.2rem;
+  }
+
+  .mobile-chat-header .chat-info p {
+    font-size: 0.9rem;
+  }
+
+  /* FULL WIDTH MESSAGE FORM FOR DESKTOP */
+  .mobile-message-form {
+    padding: 1.25rem 1.5rem;
+    max-width: none !important; /* REMOVE MAX WIDTH */
+    width: 100% !important; /* FULL WIDTH */
+  }
+
+  .mobile-message-form .message-input-wrapper {
+    width: 100% !important; /* FULL WIDTH */
+    max-width: none !important; /* REMOVE MAX WIDTH */
+  }
+
+  .mobile-message-form .message-input-container {
+    padding: 0.6rem 0.85rem;
+  }
+
+  .mobile-message-form #message-input {
+    font-size: 0.95rem;
+  }
+
+  .mobile-message-form .btn-emoji,
+  .mobile-message-form .btn-image {
+    width: 36px;
+    height: 36px;
+    font-size: 1.3rem;
+  }
+
+  .mobile-message-form .btn-send {
+    width: auto;
+    height: auto;
+    border-radius: 24px;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+  }
+
+  .mobile-message-form .btn-send .btn-text {
+    display: inline;
+  }
+
+  .mobile-chat .messages-container {
+    padding: 1.5rem;
+  }
+
+  .mobile-chat .message {
+    max-width: 75%;
+  }
+}
+
+/* Large Desktop - FULL WIDTH */
+@media (min-width: 1200px) {
+  .mobile-message-form {
+    padding: 1.5rem 2rem;
+  }
+
+  .mobile-message-form .message-input-container {
+    padding: 0.65rem 0.95rem;
+  }
+
+  .mobile-message-form #message-input {
+    font-size: 1rem;
+  }
+
+  .mobile-message-form .btn-send {
+    padding: 0.8rem 1.75rem;
+    font-size: 1rem;
+  }
+
+  .mobile-chat .messages-container {
+    padding: 2rem;
+  }
+}
+
 /* Extra small screens */
 @media (max-width: 480px) {
   .mobile-chat-header {
@@ -2387,12 +2490,20 @@
 
 /* Landscape mode adjustments */
 @media (max-width: 768px) and (orientation: landscape) {
-  .emoji-picker {
-    max-height: 50vh;
+  .mobile-chat {
+    height: calc(100vh - 100px);
   }
 
-  .emoji-grid {
-    max-height: calc(50vh - 80px);
+  .mobile-message-form {
+    padding: 0.65rem 1rem;
+  }
+
+  .mobile-message-form .emoji-picker {
+    max-height: 45vh;
+  }
+
+  .mobile-message-form .emoji-grid {
+    max-height: calc(45vh - 60px);
   }
 }
 
