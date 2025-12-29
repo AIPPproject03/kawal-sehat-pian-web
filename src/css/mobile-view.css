@@ -892,9 +892,9 @@
 }
 
 .account-number {
-  font-size: 1.6rem;
+  font-size: 1.1rem;
   font-weight: bold;
-  letter-spacing: 3px;
+  letter-spacing: 2px;
   margin: 0;
   font-family: "Courier New", monospace;
 }
