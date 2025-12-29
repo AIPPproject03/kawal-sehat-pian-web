@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/mobile-view.css">
     <link rel="stylesheet" href="../css/tamu.css">
+    <link rel="stylesheet" href="../css/chat.css">
 </head>
 
 <body>
@@ -254,11 +255,12 @@
 
         <!-- Chat Room -->
         <section id="chat-room-section" class="section">
-            <div class="container mobile-container">
+            <div class="chat-room-wrapper">
+                <!-- Enhanced Chat Header -->
                 <div class="chat-header mobile-chat-header guest-chat-header">
-                    <button id="back-to-dashboard" class="btn-back-chat">←</button>
+                    <button id="back-to-dashboard" class="btn-back-chat" title="Kembali">←</button>
                     <div class="chat-info">
-                        <h3 id="chat-room-title">Chat dengan Bidan</h3>
+                        <h3 id="chat-room-title">💬 Chat dengan Bidan</h3>
                         <p id="chat-room-subtitle">Mode Tamu - Tidak Tersimpan</p>
                     </div>
                 </div>
@@ -269,15 +271,59 @@
                             sekarang</a> untuk menyimpan riwayat!</p>
                 </div>
 
+                <!-- Chat Container -->
                 <div class="chat-container mobile-chat">
-                    <div id="messages-container" class="messages-container"></div>
+                    <!-- Messages Container -->
+                    <div id="messages-container" class="messages-container">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">💬</div>
+                            <p>Belum ada pesan</p>
+                        </div>
+                    </div>
+
+                    <!-- Message Form -->
                     <form id="message-form" class="message-form mobile-message-form">
-                        <input type="text" id="message-input" placeholder="Ketik pesan..." required>
-                        <button type="submit" class="btn-send">📤</button>
+                        <div class="message-input-wrapper">
+                            <!-- Image Preview -->
+                            <div id="image-preview-container" class="image-preview-container" style="display: none;">
+                            </div>
+
+                            <!-- Input Container -->
+                            <div class="message-input-container">
+                                <input type="text" id="message-input" placeholder="Ketik pesan..." autocomplete="off"
+                                    aria-label="Input pesan">
+
+                                <div class="input-actions">
+                                    <button type="button" id="btn-emoji" class="btn-emoji" title="Tambah Emoji"
+                                        aria-label="Emoji">😊</button>
+                                    <button type="button" id="btn-image" class="btn-image" title="Kirim Foto"
+                                        aria-label="Kirim Foto">📷</button>
+                                    <input type="file" id="image-input" accept="image/*" hidden>
+                                </div>
+                            </div>
+
+                            <!-- Emoji Picker -->
+                            <div id="emoji-picker" class="emoji-picker" style="display: none;">
+                                <div class="emoji-picker-header">
+                                    <h4>Pilih Emoji</h4>
+                                    <button type="button" id="btn-close-emoji" class="btn-close-emoji"
+                                        aria-label="Tutup">×</button>
+                                </div>
+                                <div class="emoji-grid" id="emoji-grid"></div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-send" title="Kirim Pesan" aria-label="Kirim">📤</button>
                     </form>
                 </div>
             </div>
         </section>
+
+        <!-- Image Modal -->
+        <div id="image-modal" class="image-modal" role="dialog" aria-modal="true" aria-label="Preview Gambar">
+            <button id="btn-close-image-modal" class="btn-close-image-modal" aria-label="Tutup">×</button>
+            <img id="image-modal-content" class="image-modal-content" alt="Full Image">
+        </div>
 
         <!-- Session End Notice -->
         <div id="session-end-modal" class="modal">

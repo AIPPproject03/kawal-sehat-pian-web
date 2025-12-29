@@ -574,3 +574,266 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 console.log("Tamu app initialized");
+
+// ========================================
+// EMOJI & IMAGE CHAT ENHANCEMENT
+// ========================================
+
+// Emoji list
+const emojis = [
+  "😊",
+  "😂",
+  "🥰",
+  "😍",
+  "🤗",
+  "👍",
+  "👏",
+  "🙏",
+  "❤️",
+  "💕",
+  "😢",
+  "😭",
+  "😅",
+  "😃",
+  "😄",
+  "😁",
+  "😆",
+  "🤣",
+  "😇",
+  "🙂",
+  "😉",
+  "😌",
+  "😔",
+  "😪",
+  "😴",
+  "🤔",
+  "🤨",
+  "😐",
+  "😑",
+  "😶",
+  "🙄",
+  "😏",
+  "😣",
+  "😥",
+  "😮",
+  "🤐",
+  "😯",
+  "😲",
+  "🥱",
+  "😴",
+  "🤧",
+  "🤒",
+  "🤕",
+  "🤢",
+  "🤮",
+  "🥵",
+  "🥶",
+  "😎",
+  "🤓",
+  "🧐",
+  "👶",
+  "👧",
+  "🧒",
+  "👦",
+  "👩",
+  "🧑",
+  "👨",
+  "🧕",
+  "👳",
+  "👲",
+  "🦰",
+  "🦱",
+  "🦳",
+  "🦲",
+  "💪",
+  "👋",
+  "🤚",
+  "🖐️",
+  "✋",
+  "🖖",
+  "🙌",
+  "👐",
+  "🤲",
+  "🤝",
+  "🙏",
+  "✍️",
+  "💅",
+  "🤳",
+  "💃",
+  "🕺",
+  "🎉",
+  "🎊",
+  "🎈",
+  "🎁",
+  "🏆",
+  "🥇",
+  "🥈",
+  "🥉",
+  "⭐",
+  "🌟",
+  "✨",
+  "💫",
+  "💥",
+  "💢",
+  "💦",
+  "💨",
+  "🔥",
+  "⚡",
+  "☀️",
+  "🌈",
+];
+
+let selectedImage = null;
+let selectedImageFile = null;
+
+// Initialize Emoji Picker
+function initializeEmojiPicker() {
+  const emojiGrid = document.getElementById("emoji-grid");
+  if (!emojiGrid) return;
+
+  emojiGrid.innerHTML = "";
+  emojis.forEach((emoji) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "emoji-item";
+    button.textContent = emoji;
+    button.onclick = () => insertEmoji(emoji);
+    emojiGrid.appendChild(button);
+  });
+}
+
+// Insert Emoji
+function insertEmoji(emoji) {
+  const messageInput = document.getElementById("message-input");
+  if (!messageInput) return;
+
+  const start = messageInput.selectionStart;
+  const end = messageInput.selectionEnd;
+  const text = messageInput.value;
+
+  messageInput.value = text.substring(0, start) + emoji + text.substring(end);
+  messageInput.selectionStart = messageInput.selectionEnd =
+    start + emoji.length;
+  messageInput.focus();
+}
+
+// Toggle Emoji Picker
+const btnEmoji = document.getElementById("btn-emoji");
+const emojiPicker = document.getElementById("emoji-picker");
+const btnCloseEmoji = document.getElementById("btn-close-emoji");
+
+if (btnEmoji && emojiPicker) {
+  btnEmoji.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isVisible = emojiPicker.style.display === "block";
+    emojiPicker.style.display = isVisible ? "none" : "block";
+
+    if (!isVisible) {
+      initializeEmojiPicker();
+    }
+  });
+}
+
+if (btnCloseEmoji) {
+  btnCloseEmoji.addEventListener("click", () => {
+    emojiPicker.style.display = "none";
+  });
+}
+
+// Close emoji picker when clicking outside
+document.addEventListener("click", (e) => {
+  if (emojiPicker && !emojiPicker.contains(e.target) && e.target !== btnEmoji) {
+    emojiPicker.style.display = "none";
+  }
+});
+
+// Handle Image Selection
+const btnImage = document.getElementById("btn-image");
+const imageInput = document.getElementById("image-input");
+
+if (btnImage && imageInput) {
+  btnImage.addEventListener("click", () => {
+    imageInput.click();
+  });
+
+  imageInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      showNotification("File harus berupa gambar", "error");
+      return;
+    }
+
+    if (file.size > 1024 * 1024) {
+      showNotification("Ukuran gambar maksimal 1MB", "error");
+      return;
+    }
+
+    try {
+      selectedImageFile = file;
+      selectedImage = await fileToBase64(file);
+      showImagePreview(selectedImage, file.name);
+    } catch (error) {
+      console.error("Error reading image:", error);
+      showNotification("Gagal memuat gambar", "error");
+    }
+  });
+}
+
+// Show Image Preview
+function showImagePreview(base64, fileName) {
+  const container = document.getElementById("image-preview-container");
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="image-preview-wrapper">
+      <img src="${base64}" alt="${fileName}" class="image-preview-thumb">
+      <button type="button" class="btn-remove-image-preview" onclick="removeImagePreview()">×</button>
+    </div>
+  `;
+  container.style.display = "flex";
+}
+
+// Remove Image Preview
+function removeImagePreview() {
+  const container = document.getElementById("image-preview-container");
+  const imageInput = document.getElementById("image-input");
+
+  if (container) container.style.display = "none";
+  if (imageInput) imageInput.value = "";
+
+  selectedImage = null;
+  selectedImageFile = null;
+}
+
+window.removeImagePreview = removeImagePreview;
+
+// Open Image Modal
+function openImageModal(imageUrl) {
+  const modal = document.getElementById("image-modal");
+  const modalImg = document.getElementById("image-modal-content");
+
+  if (modal && modalImg) {
+    modalImg.src = imageUrl;
+    modal.classList.add("active");
+  }
+}
+
+window.openImageModal = openImageModal;
+
+// Close Image Modal
+const btnCloseImageModal = document.getElementById("btn-close-image-modal");
+const imageModal = document.getElementById("image-modal");
+
+if (btnCloseImageModal && imageModal) {
+  btnCloseImageModal.addEventListener("click", () => {
+    imageModal.classList.remove("active");
+  });
+
+  imageModal.addEventListener("click", (e) => {
+    if (e.target === imageModal) {
+      imageModal.classList.remove("active");
+    }
+  });
+}
