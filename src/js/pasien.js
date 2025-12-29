@@ -1293,4 +1293,65 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+// ========================================
+// AUTO-EXPANDING TEXTAREA
+// ========================================
+
+const messageInput = document.getElementById("message-input");
+
+if (messageInput) {
+  // Auto-expand textarea
+  messageInput.addEventListener("input", function () {
+    this.style.height = "auto"; // Reset height
+    this.style.height = Math.min(this.scrollHeight, 120) + "px"; // Max 120px
+  });
+
+  // Handle Enter key (Shift+Enter for new line, Enter to send)
+  messageInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault(); // Prevent new line
+
+      const form = document.getElementById("message-form");
+      if (form) {
+        // Trigger form submit
+        form.dispatchEvent(
+          new Event("submit", { cancelable: true, bubbles: true })
+        );
+      }
+    }
+  });
+
+  // Reset height after send
+  const messageForm = document.getElementById("message-form");
+  if (messageForm) {
+    messageForm.addEventListener("submit", function () {
+      setTimeout(() => {
+        messageInput.style.height = "auto";
+      }, 100);
+    });
+  }
+
+  // Paste handler - clean up formatting
+  messageInput.addEventListener("paste", function (e) {
+    e.preventDefault();
+
+    // Get plain text only
+    const text = (e.clipboardData || window.clipboardData).getData("text");
+
+    // Insert at cursor position
+    const start = this.selectionStart;
+    const end = this.selectionEnd;
+    const currentValue = this.value;
+
+    this.value =
+      currentValue.substring(0, start) + text + currentValue.substring(end);
+
+    // Set cursor position
+    this.selectionStart = this.selectionEnd = start + text.length;
+
+    // Trigger input event to auto-expand
+    this.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+}
+
 console.log("✓ Pasien app initialized");

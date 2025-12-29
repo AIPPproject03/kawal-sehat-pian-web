@@ -837,3 +837,50 @@ if (btnCloseImageModal && imageModal) {
     }
   });
 }
+
+// ========================================
+// AUTO-EXPANDING TEXTAREA
+// ========================================
+
+const messageInput = document.getElementById("message-input");
+
+if (messageInput) {
+  messageInput.addEventListener("input", function () {
+    this.style.height = "auto";
+    this.style.height = Math.min(this.scrollHeight, 120) + "px";
+  });
+
+  messageInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      const form = document.getElementById("message-form");
+      if (form) {
+        form.dispatchEvent(
+          new Event("submit", { cancelable: true, bubbles: true })
+        );
+      }
+    }
+  });
+
+  const messageForm = document.getElementById("message-form");
+  if (messageForm) {
+    messageForm.addEventListener("submit", function () {
+      setTimeout(() => {
+        messageInput.style.height = "auto";
+      }, 100);
+    });
+  }
+
+  messageInput.addEventListener("paste", function (e) {
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData("text");
+    const start = this.selectionStart;
+    const end = this.selectionEnd;
+    const currentValue = this.value;
+
+    this.value =
+      currentValue.substring(0, start) + text + currentValue.substring(end);
+    this.selectionStart = this.selectionEnd = start + text.length;
+    this.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+}
