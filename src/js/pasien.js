@@ -510,39 +510,16 @@ function createConsultationCard(id, consultation, userType) {
             ).toLocaleString("id-ID")}</p>`
           : ""
       }
-      ${
-        consultation.status === "rejected" && consultation.rejectionReason
-          ? `<p class="rejection-reason"><strong>❌ Alasan:</strong> ${consultation.rejectionReason}</p>`
-          : ""
-      }
     </div>
-    ${
-      consultation.paymentProofUrl
-        ? `
-      <div class="payment-proof-section">
-        <p><strong>📷 Bukti Pembayaran:</strong></p>
-        <img 
-          src="${consultation.paymentProofUrl}" 
-          alt="Bukti Pembayaran" 
-          class="payment-proof-preview" 
-          onclick="openPaymentProofModal('${consultation.paymentProofUrl}')"
-          loading="lazy"
-          style="cursor: pointer;"
-        >
-      </div>
-    `
-        : ""
-    }
     <div class="consultation-actions">
       ${
         consultation.status === "pending"
-          ? `
-        <p class="waiting-message">⏳ Menunggu persetujuan dari bidan...</p>
-      `
+          ? `<p class="waiting-message">⏳ Menunggu persetujuan dari bidan...</p>`
           : ""
       }
+      
       ${
-        consultation.status === "active"
+        consultation.status === "active" && consultation.serviceType === "chat"
           ? `
         <button class="btn btn-primary open-chat-btn" data-id="${id}" data-name="Bidan">
           <span>💬</span> Buka Chat - Mulai Konsultasi
@@ -550,6 +527,26 @@ function createConsultationCard(id, consultation, userType) {
       `
           : ""
       }
+      
+      ${
+        consultation.status === "active" && consultation.serviceType === "phone"
+          ? `
+        <div class="phone-consultation-info">
+          <h4>📞 Konsultasi Telepon</h4>
+          <p>Konsultasi Anda telah disetujui!</p>
+          <button class="btn btn-success call-whatsapp-btn" 
+                  data-id="${id}" 
+                  data-name="${consultation.patientName || "Pasien"}">
+            <span>📞</span> Telepon via WhatsApp
+          </button>
+          <p class="phone-note">
+            <small>📱 Klik tombol di atas untuk membuka WhatsApp dan melakukan panggilan dengan bidan</small>
+          </p>
+        </div>
+      `
+          : ""
+      }
+      
       ${
         consultation.status === "finished"
           ? `
@@ -559,6 +556,7 @@ function createConsultationCard(id, consultation, userType) {
       `
           : ""
       }
+      
       ${
         consultation.status === "rejected"
           ? `
@@ -569,11 +567,18 @@ function createConsultationCard(id, consultation, userType) {
     </div>
   `;
 
-  // Add event listeners
+  // Event listeners
   const openChatBtn = card.querySelector(".open-chat-btn");
   if (openChatBtn) {
     openChatBtn.addEventListener("click", () => {
       openChatRoom(id, "Bidan");
+    });
+  }
+
+  const callWhatsAppBtn = card.querySelector(".call-whatsapp-btn");
+  if (callWhatsAppBtn) {
+    callWhatsAppBtn.addEventListener("click", () => {
+      initiateWhatsAppCall(id, callWhatsAppBtn.dataset.name);
     });
   }
 
@@ -1558,6 +1563,37 @@ async function compressImage(file, maxSizeMB = 1, maxWidthOrHeight = 1920) {
     reader.onerror = () => reject(new Error("Failed to read file"));
     reader.readAsDataURL(file);
   });
+}
+
+// ========================================
+// WHATSAPP PHONE CALL
+// ========================================
+
+function initiateWhatsAppCall(consultationId, patientName) {
+  // Nomor WhatsApp bidan (format: 62 + nomor tanpa 0)
+  const bidanPhone = "6281352797722"; // 081352797722 → 6281352797722
+
+  const message = encodeURIComponent(
+    `Halo Bidan, saya ${
+      patientName || "Pasien"
+    } ingin konsultasi telepon.\n\n` +
+      `ID Konsultasi: ${consultationId.substring(0, 8)}\n` +
+      `Mohon hubungi saya untuk telepon konsultasi. Terima kasih! 🙏`
+  );
+
+  const whatsappUrl = `https://wa.me/${bidanPhone}?text=${message}`;
+
+  // Buka WhatsApp di tab baru
+  window.open(whatsappUrl, "_blank");
+
+  // Tampilkan notifikasi
+  showNotification(
+    "WhatsApp terbuka! Klik tombol Call di chat untuk memulai telepon konsultasi.",
+    "success",
+    "📞 Siap Telepon"
+  );
+
+  console.log("✓ WhatsApp call initiated:", consultationId);
 }
 
 console.log("✓ Pasien app initialized");

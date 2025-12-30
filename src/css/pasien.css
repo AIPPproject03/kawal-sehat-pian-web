@@ -221,6 +221,66 @@
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
+/* ========================================
+   PHONE CONSULTATION INFO
+   ======================================== */
+
+.phone-consultation-info {
+  background: linear-gradient(135deg, #50c878 0%, #3da86b 100%);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin: 1rem 0;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(80, 200, 120, 0.3);
+}
+
+.phone-consultation-info h4 {
+  color: white;
+  margin-bottom: 0.75rem;
+  font-size: 1.2rem;
+}
+
+.phone-consultation-info p {
+  color: rgba(255, 255, 255, 0.95);
+  margin: 0.5rem 0;
+}
+
+.phone-note {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.85rem;
+  margin-top: 0.75rem;
+}
+
+.call-whatsapp-btn {
+  background: white;
+  color: #50c878;
+  font-weight: 600;
+  padding: 0.85rem 1.75rem;
+  border-radius: 25px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin: 1rem 0 0.5rem 0;
+  font-size: 1rem;
+}
+
+.call-whatsapp-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  background: #f5f5f5;
+}
+
+.call-whatsapp-btn:active {
+  transform: translateY(0);
+}
+
+.call-whatsapp-btn span {
+  margin-right: 0.5rem;
+  font-size: 1.2rem;
+}
+
 /* Responsive adjustments */
 @media (max-width: 480px) {
   .mobile-header h2 {
@@ -248,6 +308,19 @@
 
   .consultation-card {
     margin-bottom: 1rem;
+  }
+
+  .phone-consultation-info {
+    padding: 1.25rem;
+  }
+
+  .phone-consultation-info h4 {
+    font-size: 1.1rem;
+  }
+
+  .call-whatsapp-btn {
+    width: 100%;
+    padding: 0.85rem;
   }
 }
 

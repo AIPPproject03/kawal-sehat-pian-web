@@ -635,8 +635,6 @@ async function loadConsultationsByStatus(status, containerId) {
 function createConsultationCard(id, consultation, userType) {
   const card = document.createElement("div");
   card.className = "consultation-card";
-
-  // Add animation
   card.style.animation = "fadeInScale 0.4s ease";
 
   const statusBadge = {
@@ -721,8 +719,9 @@ function createConsultationCard(id, consultation, userType) {
       `
           : ""
       }
+      
       ${
-        consultation.status === "active"
+        consultation.status === "active" && consultation.serviceType === "chat"
           ? `
         <button class="btn btn-secondary open-chat-btn" data-id="${id}" data-name="${
               consultation.patientName || "Pasien"
@@ -741,6 +740,31 @@ function createConsultationCard(id, consultation, userType) {
       `
           : ""
       }
+      
+      ${
+        consultation.status === "active" && consultation.serviceType === "phone"
+          ? `
+        <div class="phone-consultation-info" style="background: #e8f5e9; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+          <h4>📞 Konsultasi Telepon Aktif</h4>
+          <p><strong>Pasien:</strong> ${consultation.patientName || "Tamu"}</p>
+          <p>Pasien akan menghubungi Anda via WhatsApp untuk telepon konsultasi.</p>
+          <p class="phone-reminder" style="color: #2e7d32; font-weight: 600; margin-top: 0.5rem;">
+            ⏰ Pastikan HP tersedia: 081352797722
+          </p>
+          ${
+            userType === "admin"
+              ? `
+            <button class="btn btn-success finish-now-btn" data-id="${id}" style="margin-top: 0.5rem;">
+              <span>✓</span> Selesaikan Konsultasi
+            </button>
+          `
+              : ""
+          }
+        </div>
+      `
+          : ""
+      }
+      
       ${
         consultation.status === "finished"
           ? `
@@ -755,7 +779,7 @@ function createConsultationCard(id, consultation, userType) {
     </div>
   `;
 
-  // Add event listeners
+  // Event listeners
   const approveBtn = card.querySelector(".approve-btn");
   if (approveBtn) {
     approveBtn.addEventListener("click", () => {
@@ -2088,4 +2112,22 @@ async function compressImage(file, maxSizeMB = 1, maxWidthOrHeight = 1920) {
     reader.onerror = () => reject(new Error("Failed to read file"));
     reader.readAsDataURL(file);
   });
+}
+
+// ========================================
+// WHATSAPP PHONE CALL (ADMIN VIEW)
+// ========================================
+
+function showPhoneConsultationInfo(consultationId, patientName) {
+  const bidanPhone = "081352797722";
+
+  showNotification(
+    `📞 Konsultasi Telepon dengan ${patientName}.\n` +
+      `Pasien akan menghubungi via WhatsApp ke nomor: ${bidanPhone}\n` +
+      `Pastikan HP tersedia untuk menerima panggilan!`,
+    "info",
+    "Telepon Konsultasi Aktif"
+  );
+
+  console.log("✓ Phone consultation info shown:", consultationId);
 }
