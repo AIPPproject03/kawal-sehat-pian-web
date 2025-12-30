@@ -12,8 +12,11 @@ import {
   getFirestore,
   collection,
   doc,
+  setDoc,
+  getDoc,
   addDoc,
   updateDoc,
+  deleteDoc,
   query,
   where,
   orderBy,
@@ -21,10 +24,11 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-// Import toast manager
 import toast from "./toast.js";
 
-// Firebase Configuration
+// ========================================
+// FIREBASE CONFIG
+// ========================================
 const firebaseConfig = {
   apiKey: "AIzaSyA00JIvQxqKIkTI_9w14_NRgHZMunFked8",
   authDomain: "kawal-sehat-pian.firebaseapp.com",
@@ -34,18 +38,19 @@ const firebaseConfig = {
   appId: "1:691975475378:web:5fc357ef751aa993f679ab",
   measurementId: "G-ZQC0V56E04",
 };
-
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Global State
+// ========================================
+// GLOBAL STATE
+// ========================================
 let currentUser = null;
+let currentUserData = null;
 let currentConsultationId = null;
 let messagesUnsubscribe = null;
+let hasCreatedConsultation = false;
 
-// DOM Elements
 const sections = {
   guestInfo: document.getElementById("guest-info-section"),
   dashboard: document.getElementById("guest-dashboard-section"),
@@ -54,7 +59,9 @@ const sections = {
 
 const loadingOverlay = document.getElementById("loading-overlay");
 
-// Utility Functions
+// ========================================
+// UTILITY FUNCTIONS
+// ========================================
 function showLoading() {
   if (loadingOverlay) {
     loadingOverlay.style.display = "flex";
@@ -80,26 +87,11 @@ function showNotification(message, type = "info", title = null) {
   toast.show(message, type, 4000, title);
 }
 
-// Modal Payment Logic
+// ========================================
+// MODAL PAYMENT LOGIC
+// ========================================
 let selectedService = null;
 let selectedPrice = 0;
-
-// Continue as Guest Button
-const continueAsGuestBtn = document.getElementById("continue-as-guest");
-if (continueAsGuestBtn) {
-  continueAsGuestBtn.addEventListener("click", async () => {
-    showLoading();
-
-    try {
-      await signInAnonymously(auth);
-      showNotification("Login sebagai tamu berhasil!", "success");
-    } catch (error) {
-      console.error("Guest login error:", error);
-      showNotification("Login gagal: " + error.message, "error");
-      hideLoading();
-    }
-  });
-}
 
 // Service Card Click Handler
 document.querySelectorAll(".service-card-mobile").forEach((card) => {
@@ -160,21 +152,16 @@ document.querySelectorAll(".payment-tab").forEach((tab) => {
 });
 
 function showPaymentContent(method) {
-  document
-    .querySelectorAll(".payment-content")
-    .forEach((content) => content.classList.remove("active"));
-
-  if (method === "qris") {
-    document.getElementById("qris-content").classList.add("active");
-  } else {
-    document.getElementById("transfer-content").classList.add("active");
-  }
+  document.querySelectorAll(".payment-content").forEach((content) => {
+    content.classList.remove("active");
+  });
+  document.getElementById(`${method}-content`).classList.add("active");
 }
 
 function showPaymentStep(step) {
-  document
-    .querySelectorAll(".payment-step")
-    .forEach((s) => s.classList.remove("active"));
+  document.querySelectorAll(".payment-step").forEach((stepEl) => {
+    stepEl.classList.remove("active");
+  });
   document.getElementById(`payment-step-${step}`).classList.add("active");
 }
 
@@ -271,7 +258,7 @@ if (paymentProofInput) {
   });
 }
 
-// Upload Proof Form Submit - FIXED
+// Upload Proof Form Submit
 const uploadProofForm = document.getElementById("upload-proof-form");
 if (uploadProofForm) {
   uploadProofForm.addEventListener("submit", async (e) => {
@@ -286,11 +273,18 @@ if (uploadProofForm) {
       return;
     }
 
+    // Check if user is logged in
+    if (!currentUser) {
+      showNotification("Silakan login terlebih dahulu", "error");
+      hideLoading();
+      return;
+    }
+
     try {
       // Use already processed file from dataset
       let paymentProofBase64 = paymentProofInput.dataset.processedFile;
 
-      // If not processed yet (shouldn't happen), process now
+      // If not processed yet, process now
       if (!paymentProofBase64) {
         const file = paymentProofInput.files[0];
         let processedFile = file;
@@ -303,39 +297,64 @@ if (uploadProofForm) {
         paymentProofBase64 = await fileToBase64(processedFile);
       }
 
-      await addDoc(collection(db, "consultations"), {
+      // Create consultation
+      const consultationRef = await addDoc(collection(db, "consultations"), {
         patientId: currentUser.uid,
-        patientName: currentUserData.name || "Tamu",
+        patientName: currentUserData?.name || "Tamu",
         serviceType: selectedService,
         price: selectedPrice,
         status: "pending",
         paymentProofUrl: paymentProofBase64,
         paymentProofType: "image/jpeg",
+        isGuest: true,
+        guestSession: currentUser.uid,
         createdAt: serverTimestamp(),
       });
 
-      showNotification(
-        "Konsultasi berhasil diajukan! Menunggu persetujuan.",
-        "success"
-      );
+      // Mark that consultation was created (preserve user data)
+      hasCreatedConsultation = true;
 
-      document.getElementById("payment-modal").classList.remove("active");
-      document.getElementById("upload-proof-form").reset();
-      document.getElementById("preview-container").style.display = "none";
-      document.querySelector(".file-upload-label").style.display = "flex";
+      // Update user document to mark has consultation
+      await updateDoc(doc(db, "users", currentUser.uid), {
+        hasConsultation: true,
+        consultationId: consultationRef.id,
+        lastActive: serverTimestamp(),
+      });
+
+      console.log("✓ Guest consultation created:", consultationRef.id);
+
+      // Success - Close modal and reset form
+      const modal = document.getElementById("payment-modal");
+      if (modal) modal.classList.remove("active");
+
+      const form = document.getElementById("upload-proof-form");
+      if (form) form.reset();
+
+      const previewContainer = document.getElementById("preview-container");
+      const uploadLabel = document.querySelector(".file-upload-label");
+      if (previewContainer) previewContainer.style.display = "none";
+      if (uploadLabel) uploadLabel.style.display = "flex";
 
       // Clear processed file
       delete paymentProofInput.dataset.processedFile;
 
+      // Clear selected service
       document
         .querySelectorAll(".service-card-mobile")
         .forEach((c) => c.classList.remove("selected"));
 
+      // Show success notification
+      showNotification(
+        "✅ Konsultasi berhasil diajukan! Menunggu persetujuan bidan.",
+        "success"
+      );
+
+      // Reload consultation
       loadGuestConsultation();
     } catch (error) {
-      console.error("Create consultation error:", error);
+      console.error("✗ Submit consultation error:", error);
       showNotification(
-        "Gagal mengajukan konsultasi: " + error.message,
+        "Gagal mengajukan konsultasi. Silakan coba lagi.",
         "error"
       );
     }
@@ -344,14 +363,16 @@ if (uploadProofForm) {
   });
 }
 
-// Load Guest Current Consultation (No History)
+// ========================================
+// LOAD GUEST CONSULTATION
+// ========================================
 async function loadGuestConsultation() {
   const consultationContainer = document.getElementById(
     "guest-current-consultation"
   );
   if (!consultationContainer) return;
 
-  consultationContainer.innerHTML = "<p>Memuat...</p>";
+  consultationContainer.innerHTML = '<p class="empty-state">Memuat...</p>';
 
   try {
     const q = query(
@@ -361,33 +382,67 @@ async function loadGuestConsultation() {
       orderBy("createdAt", "desc")
     );
 
-    onSnapshot(q, (snapshot) => {
-      if (snapshot.empty) {
+    // Real-time listener
+    onSnapshot(
+      q,
+      (snapshot) => {
+        if (snapshot.empty) {
+          consultationContainer.innerHTML =
+            '<p class="empty-state">Belum ada konsultasi aktif. Pilih layanan di atas untuk memulai!</p>';
+          return;
+        }
+
+        consultationContainer.innerHTML = "";
+
+        // Only show the first (latest) consultation
+        const doc = snapshot.docs[0];
+        const consultation = doc.data();
+        currentConsultationId = doc.id;
+
+        const consultationCard = createGuestConsultationCard(
+          doc.id,
+          consultation
+        );
+        consultationContainer.appendChild(consultationCard);
+
+        // Check for status changes
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === "modified") {
+            const consultation = change.doc.data();
+            if (consultation.status === "active") {
+              showNotification(
+                "✅ Konsultasi Anda telah disetujui! Klik 'Buka Chat' untuk memulai.",
+                "success",
+                "Konsultasi Disetujui"
+              );
+            } else if (consultation.status === "finished") {
+              showNotification(
+                "✔️ Konsultasi telah selesai. Terima kasih!",
+                "success",
+                "Konsultasi Selesai"
+              );
+            } else if (consultation.status === "rejected") {
+              showNotification(
+                "❌ Konsultasi ditolak. Silakan ajukan kembali.",
+                "error",
+                "Konsultasi Ditolak"
+              );
+            }
+          }
+        });
+      },
+      (error) => {
+        console.error("Load consultation error:", error);
         consultationContainer.innerHTML =
-          '<p class="empty-state">Belum ada konsultasi aktif</p>';
-        return;
+          '<p class="error">Gagal memuat data</p>';
       }
-
-      consultationContainer.innerHTML = "";
-
-      // Only show the first (latest) consultation
-      const doc = snapshot.docs[0];
-      const consultation = doc.data();
-      currentConsultationId = doc.id;
-
-      const consultationCard = createGuestConsultationCard(
-        doc.id,
-        consultation
-      );
-      consultationContainer.appendChild(consultationCard);
-    });
+    );
   } catch (error) {
-    console.error("Load guest consultation error:", error);
+    console.error("Load consultation error:", error);
     consultationContainer.innerHTML = '<p class="error">Gagal memuat data</p>';
   }
 }
 
-// Create Guest Consultation Card (Simplified)
 function createGuestConsultationCard(id, consultation) {
   const card = document.createElement("div");
   card.className = "consultation-card";
@@ -412,6 +467,7 @@ function createGuestConsultationCard(id, consultation) {
     <p><strong>Harga:</strong> Rp ${consultation.price.toLocaleString(
       "id-ID"
     )}</p>
+    <p><strong>Status:</strong> ${statusBadge}</p>
     <div class="guest-reminder" style="margin-top: 1rem; padding: 0.75rem; background: #fff3cd; border-radius: 8px;">
       <small style="color: #856404;">⚠️ Riwayat tidak tersimpan. <a href="pasien.html" style="color: #4a90e2; font-weight: 600;">Daftar sekarang</a></small>
     </div>
@@ -439,7 +495,9 @@ function createGuestConsultationCard(id, consultation) {
   return card;
 }
 
-// Open Chat Room (Guest)
+// ========================================
+// CHAT FUNCTIONS
+// ========================================
 function openChatRoom(consultationId) {
   currentConsultationId = consultationId;
 
@@ -451,7 +509,6 @@ function openChatRoom(consultationId) {
   loadMessages(consultationId);
 }
 
-// Load Messages
 function loadMessages(consultationId) {
   const messagesContainer = document.getElementById("messages-container");
   if (!messagesContainer) return;
@@ -486,7 +543,6 @@ function loadMessages(consultationId) {
   });
 }
 
-// Create Message Element - SIMPLE
 function createMessageElement(message) {
   const div = document.createElement("div");
   const isOwnMessage = message.senderId === currentUser.uid;
@@ -517,17 +573,21 @@ function createMessageElement(message) {
            alt="Gambar" 
            class="message-image" 
            onclick="openImageModal('${message.imageUrl}')"
-           loading="lazy">
+           loading="lazy"
+           style="cursor: pointer;">
     </div>
   `
     : "";
 
   div.innerHTML = `
     <div class="message-header">
-      <strong>${message.senderName}</strong>
+      <strong>${message.senderName || "User"}</strong>
       <span class="message-time">${
         message.timestamp
-          ? new Date(message.timestamp.toDate()).toLocaleTimeString("id-ID")
+          ? new Date(message.timestamp.toDate()).toLocaleTimeString("id-ID", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
           : "Mengirim..."
       }</span>
     </div>
@@ -551,20 +611,33 @@ if (messageForm) {
     const messageInput = document.getElementById("message-input");
     const text = messageInput.value.trim();
 
-    if (!text || !currentConsultationId) return;
+    if (!text && !selectedImage) return;
+
+    if (!currentConsultationId) {
+      showNotification("Tidak ada konsultasi aktif", "error");
+      return;
+    }
 
     try {
       await addDoc(
         collection(db, "consultations", currentConsultationId, "messages"),
         {
-          text: text,
+          text: text || "",
           senderId: currentUser.uid,
-          senderName: "Tamu",
+          senderName: currentUserData?.name || "Tamu",
+          imageUrl: selectedImage || null,
           timestamp: serverTimestamp(),
         }
       );
 
       messageInput.value = "";
+      selectedImage = null;
+      selectedImageFile = null;
+
+      const imagePreview = document.getElementById("image-preview-container");
+      if (imagePreview) imagePreview.style.display = "none";
+
+      console.log("✓ Message sent");
     } catch (error) {
       console.error("Send message error:", error);
       showNotification("Gagal mengirim pesan", "error");
@@ -585,7 +658,9 @@ if (backToDashboardBtn) {
   });
 }
 
-// Utility Functions
+// ========================================
+// UTILITY FUNCTIONS
+// ========================================
 function escapeHtml(text) {
   const map = {
     "&": "&amp;",
@@ -606,34 +681,232 @@ function fileToBase64(file) {
   });
 }
 
-// Authentication State (Guest)
+// ========================================
+// LOGOUT WITH CLEANUP
+// ========================================
+const logoutBtn = document.getElementById("logout-btn");
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", async () => {
+    if (
+      !confirm(
+        "Yakin ingin keluar? Riwayat akan hilang jika belum berkonsultasi."
+      )
+    )
+      return;
+
+    showLoading();
+
+    try {
+      if (currentUser && !hasCreatedConsultation) {
+        try {
+          await deleteDoc(doc(db, "users", currentUser.uid));
+          console.log("✓ Guest user cleaned up (no consultation)");
+        } catch (cleanupError) {
+          console.error("Cleanup error:", cleanupError);
+        }
+      } else {
+        console.log("✓ Guest user preserved (has consultation)");
+      }
+
+      await signOut(auth);
+      showNotification("Berhasil keluar. Terima kasih!", "success");
+
+      setTimeout(() => {
+        window.location.href = "../index.html";
+      }, 1000);
+    } catch (error) {
+      console.error("Logout error:", error);
+      showNotification("Gagal keluar", "error");
+      hideLoading();
+    }
+  });
+}
+
+// ========================================
+// AUTH STATE
+// ========================================
 onAuthStateChanged(auth, async (user) => {
   showLoading();
 
   if (user) {
     currentUser = user;
-    showSection("dashboard");
-    loadGuestConsultation();
 
-    // Show reminder about not saving history
-    setTimeout(() => {
-      showNotification(
-        "⚠️ Mode Tamu: Riwayat tidak akan tersimpan!",
-        "warning"
-      );
-    }, 1000);
+    try {
+      const userDocRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists() && userDoc.data().role === "guest") {
+        currentUserData = userDoc.data();
+
+        const userInfo = document.getElementById("user-info");
+        if (userInfo) userInfo.style.display = "flex";
+
+        await updateDoc(userDocRef, {
+          lastActive: serverTimestamp(),
+        });
+
+        console.log("✓ Guest session restored:", user.uid);
+
+        showSection("dashboard");
+        loadGuestConsultation();
+
+        setTimeout(() => {
+          showNotification(
+            "⚠️ Mode Tamu: Riwayat tidak akan tersimpan setelah logout!",
+            "warning"
+          );
+        }, 1500);
+      } else {
+        console.warn("Invalid guest session, signing out");
+        await signOut(auth);
+        showSection("guestInfo");
+      }
+    } catch (error) {
+      console.error("Auth state error:", error);
+      await signOut(auth);
+      showSection("guestInfo");
+    }
   } else {
     currentUser = null;
+    currentUserData = null;
+    hasCreatedConsultation = false;
     showSection("guestInfo");
   }
 
   hideLoading();
 });
 
-console.log("Tamu app initialized");
+// ========================================
+// CONTINUE AS GUEST BUTTON
+// ========================================
+const continueAsGuestBtn = document.getElementById("continue-as-guest");
+if (continueAsGuestBtn) {
+  continueAsGuestBtn.addEventListener("click", async () => {
+    showLoading();
+
+    try {
+      const userCredential = await signInAnonymously(auth);
+      const user = userCredential.user;
+
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        name: "Tamu",
+        email: "",
+        role: "guest",
+        isGuest: true,
+        createdAt: serverTimestamp(),
+        lastActive: serverTimestamp(),
+      });
+
+      currentUserData = {
+        uid: user.uid,
+        name: "Tamu",
+        email: "",
+        role: "guest",
+        isGuest: true,
+      };
+
+      showNotification("Login sebagai tamu berhasil!", "success");
+      console.log("✓ Guest logged in:", user.uid);
+    } catch (error) {
+      console.error("Guest login error:", error);
+      showNotification("Login gagal: " + error.message, "error");
+      hideLoading();
+    }
+  });
+}
+
+// Cleanup on beforeunload
+window.addEventListener("beforeunload", async () => {
+  if (currentUser && !hasCreatedConsultation) {
+    try {
+      await deleteDoc(doc(db, "users", currentUser.uid));
+      console.log("✓ Guest user cleaned up on exit");
+    } catch (error) {
+      console.error("Cleanup error:", error);
+    }
+  }
+});
 
 // ========================================
-// EMOJI & IMAGE CHAT ENHANCEMENT
+// IMAGE COMPRESSION (ONLY ONE DECLARATION!)
+// ========================================
+async function compressImage(file, maxSizeMB = 1, maxWidthOrHeight = 1920) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const img = new Image();
+
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidthOrHeight) {
+            height = (height * maxWidthOrHeight) / width;
+            width = maxWidthOrHeight;
+          }
+        } else {
+          if (height > maxWidthOrHeight) {
+            width = (width * maxWidthOrHeight) / height;
+            height = maxWidthOrHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        let quality = 0.9;
+        const targetSize = maxSizeMB * 1024 * 1024;
+
+        const tryCompress = (currentQuality) => {
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(new Error("Compression failed"));
+                return;
+              }
+
+              console.log(
+                `Compressed at quality ${currentQuality}: ${(
+                  blob.size / 1024
+                ).toFixed(2)} KB`
+              );
+
+              if (blob.size > targetSize && currentQuality > 0.1) {
+                tryCompress(currentQuality - 0.1);
+              } else {
+                const compressedFile = new File([blob], file.name, {
+                  type: "image/jpeg",
+                  lastModified: Date.now(),
+                });
+                resolve(compressedFile);
+              }
+            },
+            "image/jpeg",
+            currentQuality
+          );
+        };
+
+        tryCompress(quality);
+      };
+
+      img.onerror = () => reject(new Error("Failed to load image"));
+      img.src = e.target.result;
+    };
+
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
+  });
+}
+
+// ========================================
+// EMOJI & IMAGE UPLOAD
 // ========================================
 
 // Emoji list
@@ -746,16 +1019,14 @@ let selectedImageFile = null;
 // Initialize Emoji Picker
 function initializeEmojiPicker() {
   const emojiGrid = document.getElementById("emoji-grid");
-  if (!emojiGrid) return;
+  if (!emojiGrid || emojiGrid.children.length > 0) return;
 
-  emojiGrid.innerHTML = "";
   emojis.forEach((emoji) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "emoji-item";
-    button.textContent = emoji;
-    button.onclick = () => insertEmoji(emoji);
-    emojiGrid.appendChild(button);
+    const span = document.createElement("span");
+    span.className = "emoji-item";
+    span.textContent = emoji;
+    span.onclick = () => insertEmoji(emoji);
+    emojiGrid.appendChild(span);
   });
 }
 
@@ -772,6 +1043,9 @@ function insertEmoji(emoji) {
   messageInput.selectionStart = messageInput.selectionEnd =
     start + emoji.length;
   messageInput.focus();
+
+  const emojiPicker = document.getElementById("emoji-picker");
+  if (emojiPicker) emojiPicker.style.display = "none";
 }
 
 // Toggle Emoji Picker
@@ -805,7 +1079,7 @@ document.addEventListener("click", (e) => {
 });
 
 // ========================================
-// IMAGE UPLOAD - CAMERA OR GALLERY
+// IMAGE UPLOAD
 // ========================================
 
 const btnImage = document.getElementById("btn-image");
@@ -832,7 +1106,6 @@ if (btnImage && imageInput) {
     }
 
     try {
-      // Compress image if larger than 1MB
       let processedFile = file;
 
       if (file.size > 1024 * 1024) {
@@ -911,6 +1184,72 @@ function showImageSourceOptions() {
   });
 }
 
+function showImagePreview(base64, fileName) {
+  const container = document.getElementById("image-preview-container");
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="image-preview-wrapper">
+      <img src="${base64}" alt="${fileName}" class="image-preview-thumb">
+      <button type="button" class="btn-remove-image-preview" onclick="removeImagePreview()">×</button>
+    </div>
+  `;
+  container.style.display = "flex";
+}
+
+function removeImagePreview() {
+  const container = document.getElementById("image-preview-container");
+  const imageInput = document.getElementById("image-input");
+
+  if (container) container.style.display = "none";
+  if (imageInput) imageInput.value = "";
+
+  selectedImage = null;
+  selectedImageFile = null;
+}
+
+window.removeImagePreview = removeImagePreview;
+
+function openImageModal(imageUrl) {
+  const modal = document.getElementById("image-modal");
+  const modalImg = document.getElementById("image-modal-content");
+
+  if (modal && modalImg) {
+    modalImg.src = imageUrl;
+    modal.classList.add("active");
+    document.body.style.overflow = "hidden";
+  }
+}
+
+window.openImageModal = openImageModal;
+
+const btnCloseImageModal = document.getElementById("btn-close-image-modal");
+const imageModal = document.getElementById("image-modal");
+
+if (btnCloseImageModal && imageModal) {
+  btnCloseImageModal.addEventListener("click", () => {
+    imageModal.classList.remove("active");
+    document.body.style.overflow = "";
+  });
+
+  imageModal.addEventListener("click", (e) => {
+    if (e.target === imageModal) {
+      imageModal.classList.remove("active");
+      document.body.style.overflow = "";
+    }
+  });
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    const imageModal = document.getElementById("image-modal");
+    if (imageModal && imageModal.classList.contains("active")) {
+      imageModal.classList.remove("active");
+      document.body.style.overflow = "";
+    }
+  }
+});
+
 // ========================================
 // AUTO-EXPANDING TEXTAREA
 // ========================================
@@ -958,81 +1297,4 @@ if (messageInput) {
   });
 }
 
-// ========================================
-// IMAGE COMPRESSION UTILITY
-// ========================================
-
-// Compress image to target size (default 1MB)
-async function compressImage(file, maxSizeMB = 1, maxWidthOrHeight = 1920) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onload = (e) => {
-      const img = new Image();
-
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > maxWidthOrHeight) {
-            height = (height * maxWidthOrHeight) / width;
-            width = maxWidthOrHeight;
-          }
-        } else {
-          if (height > maxWidthOrHeight) {
-            width = (width * maxWidthOrHeight) / height;
-            height = maxWidthOrHeight;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
-
-        let quality = 0.9;
-        const targetSize = maxSizeMB * 1024 * 1024;
-
-        const tryCompress = (currentQuality) => {
-          canvas.toBlob(
-            (blob) => {
-              if (!blob) {
-                reject(new Error("Compression failed"));
-                return;
-              }
-
-              console.log(
-                `Compressed at quality ${currentQuality}: ${(
-                  blob.size / 1024
-                ).toFixed(2)} KB`
-              );
-
-              if (blob.size > targetSize && currentQuality > 0.1) {
-                tryCompress(currentQuality - 0.1);
-              } else {
-                const compressedFile = new File([blob], file.name, {
-                  type: "image/jpeg",
-                  lastModified: Date.now(),
-                });
-                resolve(compressedFile);
-              }
-            },
-            "image/jpeg",
-            currentQuality
-          );
-        };
-
-        tryCompress(quality);
-      };
-
-      img.onerror = () => reject(new Error("Failed to load image"));
-      img.src = e.target.result;
-    };
-
-    reader.onerror = () => reject(new Error("Failed to read file"));
-    reader.readAsDataURL(file);
-  });
-}
+console.log("✓ Tamu app initialized");
