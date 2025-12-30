@@ -419,3 +419,56 @@
     gap: 2rem;
   }
 }
+
+/* ========================================
+   LOCKED SERVICE CARD
+   ======================================== */
+
+.service-locked {
+  position: relative;
+  opacity: 0.7;
+  cursor: pointer !important;
+  background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%) !important;
+  border: 2px dashed #ccc !important;
+}
+
+.service-locked:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  opacity: 0.85;
+}
+
+.service-locked .service-icon {
+  filter: grayscale(50%);
+}
+
+.locked-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+  z-index: 10;
+}
+
+.service-locked .service-price {
+  color: #999 !important;
+}
+
+.service-locked .service-desc {
+  color: #666 !important;
+  font-weight: 500;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .locked-badge {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem;
+  }
+}

@@ -93,22 +93,43 @@ function showNotification(message, type = "info", title = null) {
 let selectedService = null;
 let selectedPrice = 0;
 
-// Service Card Click Handler
-document.querySelectorAll(".service-card-mobile").forEach((card) => {
-  card.addEventListener("click", function () {
-    document
-      .querySelectorAll(".service-card-mobile")
-      .forEach((c) => c.classList.remove("selected"));
+// Service Card Click Handler (Chat Only)
+document
+  .querySelectorAll(".service-card-mobile:not(.service-locked)")
+  .forEach((card) => {
+    card.addEventListener("click", function () {
+      document
+        .querySelectorAll(".service-card-mobile")
+        .forEach((c) => c.classList.remove("selected"));
 
-    this.classList.add("selected");
-    selectedService = this.dataset.service;
-    selectedPrice = parseInt(this.dataset.price);
+      this.classList.add("selected");
+      selectedService = this.dataset.service;
+      selectedPrice = parseInt(this.dataset.price);
 
-    setTimeout(() => {
-      showPaymentModal();
-    }, 300);
+      setTimeout(() => {
+        showPaymentModal();
+      }, 300);
+    });
   });
-});
+
+// Show Register Prompt for Locked Service
+function showRegisterPrompt() {
+  const confirmed = confirm(
+    "📞 Telepon Konsultasi hanya tersedia untuk pasien terdaftar.\n\n" +
+      "✅ Keuntungan Daftar:\n" +
+      "• Riwayat konsultasi tersimpan\n" +
+      "• Akses telepon konsultasi\n" +
+      "• Data kesehatan terintegrasi\n\n" +
+      "Daftar sekarang?"
+  );
+
+  if (confirmed) {
+    window.location.href = "pasien.html";
+  }
+}
+
+// Make function global for onclick
+window.showRegisterPrompt = showRegisterPrompt;
 
 // Show Payment Modal
 function showPaymentModal() {
@@ -276,6 +297,16 @@ if (uploadProofForm) {
     // Check if user is logged in
     if (!currentUser) {
       showNotification("Silakan login terlebih dahulu", "error");
+      hideLoading();
+      return;
+    }
+
+    // ✅ VALIDATION: Guest can only use chat service
+    if (selectedService !== "chat") {
+      showNotification(
+        "❌ Tamu hanya bisa Chat Konsultasi. Daftar sebagai pasien untuk Telepon Konsultasi.",
+        "error"
+      );
       hideLoading();
       return;
     }
@@ -451,10 +482,11 @@ function createGuestConsultationCard(id, consultation) {
     pending: "⏳ Menunggu",
     active: "✅ Aktif",
     finished: "✔️ Selesai",
+    rejected: "❌ Ditolak",
   }[consultation.status];
 
-  const serviceLabel =
-    consultation.serviceType === "chat" ? "💬 Chat" : "📞 Telepon";
+  // Guest should only have chat service
+  const serviceLabel = "💬 Chat";
 
   card.innerHTML = `
     <div class="consultation-header">
@@ -469,22 +501,45 @@ function createGuestConsultationCard(id, consultation) {
     )}</p>
     <p><strong>Status:</strong> ${statusBadge}</p>
     <div class="guest-reminder" style="margin-top: 1rem; padding: 0.75rem; background: #fff3cd; border-radius: 8px;">
-      <small style="color: #856404;">⚠️ Riwayat tidak tersimpan. <a href="pasien.html" style="color: #4a90e2; font-weight: 600;">Daftar sekarang</a></small>
+      <small style="color: #856404;">⚠️ Riwayat tidak tersimpan. <a href="pasien.html" style="color: #4a90e2; font-weight: 600;">Daftar sekarang</a> untuk akses telepon & riwayat!</small>
     </div>
     <div class="consultation-actions">
       ${
-        consultation.status === "active"
-          ? `<button class="btn btn-primary open-chat-btn" data-id="${id}">Buka Chat</button>`
+        consultation.status === "pending"
+          ? `<p class="waiting-message" style="text-align: center; color: #856404; background: #fff3cd; padding: 0.75rem; border-radius: 8px; margin: 0.5rem 0;">⏳ Menunggu persetujuan bidan...</p>`
           : ""
       }
+      
+      ${
+        consultation.status === "active"
+          ? `<button class="btn btn-primary open-chat-btn" data-id="${id}">
+               <span>💬</span> Buka Chat
+             </button>`
+          : ""
+      }
+      
       ${
         consultation.status === "finished"
-          ? `<p style="text-align: center; color: var(--text-light); margin-top: 1rem;">Konsultasi selesai. Data akan hilang saat logout.</p>`
+          ? `
+            <p style="text-align: center; color: var(--text-light); margin-top: 1rem;">
+              Konsultasi selesai. Data akan hilang saat logout.
+            </p>
+            <button onclick="window.location.href='pasien.html'" class="btn btn-accent btn-block" style="margin-top: 0.5rem;">
+              <span>📝</span> Daftar untuk Telepon Konsultasi
+            </button>
+          `
+          : ""
+      }
+      
+      ${
+        consultation.status === "rejected"
+          ? `<p class="rejected-message" style="text-align: center; color: #721c24; background: #f8d7da; padding: 0.75rem; border-radius: 8px; margin: 0.5rem 0;">❌ Konsultasi ditolak. Silakan ajukan kembali.</p>`
           : ""
       }
     </div>
   `;
 
+  // Event listener for chat only
   const openChatBtn = card.querySelector(".open-chat-btn");
   if (openChatBtn) {
     openChatBtn.addEventListener("click", () => {
@@ -1295,6 +1350,32 @@ if (messageInput) {
     this.selectionStart = this.selectionEnd = start + text.length;
     this.dispatchEvent(new Event("input", { bubbles: true }));
   });
+}
+
+// ========================================
+// WHATSAPP PHONE CALL
+// ========================================
+
+function initiateWhatsAppCall(consultationId, guestName) {
+  const bidanPhone = "6281352797722";
+
+  const message = encodeURIComponent(
+    `Halo Bidan, saya ${guestName || "Tamu"} ingin konsultasi telepon.\n\n` +
+      `ID Konsultasi: ${consultationId.substring(0, 8)}\n` +
+      `Mohon hubungi saya untuk telepon konsultasi. Terima kasih! 🙏`
+  );
+
+  const whatsappUrl = `https://wa.me/${bidanPhone}?text=${message}`;
+
+  window.open(whatsappUrl, "_blank");
+
+  showNotification(
+    "WhatsApp terbuka! Klik tombol Call di chat untuk memulai telepon konsultasi.",
+    "success",
+    "📞 Siap Telepon"
+  );
+
+  console.log("✓ WhatsApp call initiated:", consultationId);
 }
 
 console.log("✓ Tamu app initialized");

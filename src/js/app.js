@@ -662,7 +662,7 @@ function createConsultationCard(id, consultation, userType) {
     <div class="consultation-header">
       <h4>
         ${consultation.patientName || "Pasien"}
-        ${isGuest ? '<span class="guest-tag">👤 Tamu</span>' : ""}
+        ${isGuest ? '<span class="guest-tag">👤 Tamu (Chat Only)</span>' : ""}
       </h4>
       <span class="status-badge status-${
         consultation.status
@@ -674,6 +674,11 @@ function createConsultationCard(id, consultation, userType) {
         "id-ID"
       )}</p>
       <p><strong>📅 Tanggal:</strong> ${dateFormatted}</p>
+      ${
+        isGuest
+          ? `<p style="color: #856404;"><strong>⚠️</strong> Tamu - Hanya Chat Konsultasi</p>`
+          : ""
+      }
       ${
         consultation.approvedAt
           ? `<p><strong>✅ Disetujui:</strong> ${new Date(

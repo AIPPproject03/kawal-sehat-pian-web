@@ -47,11 +47,18 @@
                         <h3>✨ Keuntungan Daftar sebagai Pasien:</h3>
                         <ul>
                             <li>📋 Riwayat konsultasi tersimpan permanen</li>
+                            <li>📞 <strong>Akses Telepon Konsultasi</strong></li>
                             <li>🔄 Bisa konsultasi berulang dengan mudah</li>
                             <li>📊 Tracking kondisi kesehatan</li>
                             <li>💾 Data pribadi aman dan terenkripsi</li>
                             <li>⚡ Proses lebih cepat di konsultasi berikutnya</li>
                         </ul>
+                        <div class="benefit-highlight"
+                            style="margin-top: 1rem; padding: 1rem; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
+                            <p style="margin: 0; color: #856404; font-weight: 600;">
+                                ⚠️ Mode Tamu: Hanya Chat Konsultasi (Rp 15.000)
+                            </p>
+                        </div>
                     </div>
 
                     <div class="guest-actions">
@@ -87,12 +94,16 @@
                 </div>
 
                 <!-- Guest Reminder -->
-                <div class="guest-reminder">
-                    <p>⚠️ Ini adalah sesi sementara. <a href="pasien.html" class="link-primary">Daftar sekarang</a>
-                        untuk menyimpan riwayat!</p>
+                <div class="guest-reminder"
+                    style="background: linear-gradient(135deg, #fff3cd, #ffe082); border-left: 4px solid #ffc107;">
+                    <p style="margin: 0;">
+                        <strong>⚠️ Mode Tamu:</strong> Hanya Chat Konsultasi (Rp 15.000).
+                        <a href="pasien.html" class="link-primary" style="font-weight: 700;">Daftar sekarang</a>
+                        untuk akses <strong>Telepon Konsultasi</strong> & riwayat tersimpan!
+                    </p>
                 </div>
 
-                <!-- Service Selection -->
+                <!-- Service Selection (Chat Only for Guest) -->
                 <div class="service-cards-mobile">
                     <div class="service-card-mobile" data-service="chat" data-price="15000">
                         <div class="service-icon">💬</div>
@@ -100,11 +111,14 @@
                         <p class="service-price">Rp 15.000</p>
                         <p class="service-desc">Konsultasi via chat dengan bidan</p>
                     </div>
-                    <div class="service-card-mobile" data-service="phone" data-price="35000">
+
+                    <!-- Phone Service - Locked for Guest -->
+                    <div class="service-card-mobile service-locked" onclick="showRegisterPrompt()">
                         <div class="service-icon">📞</div>
+                        <div class="locked-badge">🔒 Harus Daftar</div>
                         <h3>Telepon Konsultasi</h3>
                         <p class="service-price">Rp 35.000</p>
-                        <p class="service-desc">Konsultasi via telepon langsung</p>
+                        <p class="service-desc">Daftar sebagai pasien untuk akses telepon</p>
                     </div>
                 </div>
 
