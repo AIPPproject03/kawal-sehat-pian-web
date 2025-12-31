@@ -22,8 +22,13 @@ import {
   orderBy,
   onSnapshot,
   serverTimestamp,
+  writeBatch,
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 import toast from "./toast.js";
+import {
+  generateConsultationSummary,
+  exportSummaryToPDF,
+} from "./gemini-config.js"; // ✅ ADD THIS
 
 // Firebase Configuration
 const firebaseConfig = {
@@ -944,7 +949,6 @@ function loadMessages(consultationId) {
 
   messagesContainer.innerHTML = '<p class="empty-state">Memuat pesan...</p>';
 
-  // Unsubscribe from previous listener
   if (messagesUnsubscribe) {
     messagesUnsubscribe();
   }
@@ -967,11 +971,10 @@ function loadMessages(consultationId) {
 
       snapshot.forEach((doc) => {
         const message = doc.data();
-        const messageElement = createMessageElement(message);
+        const messageElement = createMessageElement(message, doc.id); // ✅ Pass doc.id
         messagesContainer.appendChild(messageElement);
       });
 
-      // Auto-scroll to bottom with smooth animation
       setTimeout(() => {
         messagesContainer.scrollTo({
           top: messagesContainer.scrollHeight,
@@ -987,9 +990,41 @@ function loadMessages(consultationId) {
 }
 
 // Create Message Element - SIMPLE - FIXED
-function createMessageElement(message) {
+function createMessageElement(message, messageId) {
   const div = document.createElement("div");
   div.style.animation = "slideIn 0.3s ease";
+  div.dataset.messageId = messageId;
+
+  // AI Summary Message
+  if (message.isAiSummary) {
+    div.className = "message message-system ai-summary-message";
+    div.innerHTML = `
+      <div class="ai-summary-header">
+        <span class="ai-icon">🤖</span>
+        <h4>Ringkasan Konsultasi (AI)</h4>
+      </div>
+      <div class="message-text ai-summary-content">${escapeHtml(message.text)
+        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+        .replace(/\n/g, "<br>")}</div>
+      <div class="ai-summary-actions">
+        <button class="btn-download-summary" onclick="downloadAiSummaryPDF('${messageId}')">
+          <span>📄</span> Download PDF
+        </button>
+        <button class="btn-copy-summary" onclick="copyAiSummary('${messageId}')">
+          <span>📋</span> Salin Teks
+        </button>
+      </div>
+      <span class="message-time">${
+        message.timestamp
+          ? new Date(message.timestamp.toDate()).toLocaleTimeString("id-ID", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : ""
+      }</span>
+    `;
+    return div;
+  }
 
   // System message
   if (message.isSystemMessage) {
@@ -1008,7 +1043,7 @@ function createMessageElement(message) {
     return div;
   }
 
-  // Regular message
+  // Regular message (existing code...)
   const isOwnMessage = currentUser && message.senderId === currentUser.uid;
   div.className = `message ${isOwnMessage ? "message-own" : "message-other"}`;
 
@@ -1174,62 +1209,94 @@ if (finishConsultationBtn) {
   });
 }
 
-// Finish Consultation from Card
-async function finishConsultationFromCard(consultationId) {
-  if (!confirm("✓ Tandai konsultasi ini sebagai selesai?")) return;
+// ========================================
+// FINISH CONSULTATION WITH AI SUMMARY
+// ========================================
 
-  showLoading();
-
-  try {
-    await updateDoc(doc(db, "consultations", consultationId), {
-      status: "finished",
-      finishedAt: serverTimestamp(),
-      finishedBy: currentUser.uid,
-    });
-
-    await addDoc(collection(db, "consultations", consultationId, "messages"), {
-      text: "✅ Konsultasi telah selesai. Terima kasih atas kepercayaan Anda! Semoga sehat selalu. 🙏",
-      senderId: "system",
-      senderName: "Sistem",
-      timestamp: serverTimestamp(),
-      isSystemMessage: true,
-    });
-
-    showNotification("✓ Konsultasi berhasil diselesaikan!", "success");
-
-    console.log("✓ Consultation finished:", consultationId);
-  } catch (error) {
-    console.error("✗ Finish consultation error:", error);
-    showNotification("Gagal menyelesaikan konsultasi", "error");
-  }
-
-  hideLoading();
-}
-
-// Finish Consultation from Chat
 async function finishConsultationFromChat(consultationId) {
-  if (!confirm("✓ Tandai konsultasi ini sebagai selesai?")) return;
+  if (!confirm("✓ Selesaikan konsultasi dan buat ringkasan AI?")) return;
 
-  showLoading();
+  showLoading("Membuat ringkasan AI...");
 
   try {
+    // 1. Get consultation
+    const consultationDoc = await getDoc(
+      doc(db, "consultations", consultationId)
+    );
+    if (!consultationDoc.exists()) {
+      throw new Error("Konsultasi tidak ditemukan");
+    }
+    const consultationData = consultationDoc.data();
+
+    // 2. Get messages
+    const messagesSnapshot = await getDocs(
+      collection(db, "consultations", consultationId, "messages")
+    );
+
+    const messages = [];
+    messagesSnapshot.forEach((doc) => {
+      const data = doc.data();
+      if (data.timestamp) {
+        messages.push(data);
+      }
+    });
+
+    // Sort by timestamp
+    messages.sort((a, b) => {
+      if (!a.timestamp || !b.timestamp) return 0;
+      return a.timestamp.toMillis() - b.timestamp.toMillis();
+    });
+
+    console.log(`✓ Loaded ${messages.length} messages for AI summary`);
+
+    // 3. Generate AI Summary
+    showNotification("🤖 Membuat ringkasan AI...", "info");
+
+    const summaryResult = await generateConsultationSummary(
+      messages,
+      consultationData.patientName || "Pasien",
+      consultationData.serviceType || "chat"
+    );
+
+    console.log("✓ AI Summary result:", summaryResult);
+
+    // 4. Update consultation
     await updateDoc(doc(db, "consultations", consultationId), {
       status: "finished",
       finishedAt: serverTimestamp(),
       finishedBy: currentUser.uid,
+      aiSummary: summaryResult.summary,
+      aiSummaryGeneratedAt: summaryResult.generatedAt,
+      aiSummaryUsedFallback: summaryResult.usedFallback || false,
     });
 
+    // 5. Send completion message
     await addDoc(collection(db, "consultations", consultationId, "messages"), {
-      text: "✅ Konsultasi telah selesai. Terima kasih atas kepercayaan Anda! Semoga sehat selalu. 🙏",
+      text: "✅ Konsultasi telah selesai. Terima kasih! Semoga sehat selalu. 🙏",
       senderId: "system",
       senderName: "Sistem",
       timestamp: serverTimestamp(),
       isSystemMessage: true,
     });
 
-    showNotification("✓ Konsultasi berhasil diselesaikan!", "success");
+    // 6. Send AI summary message
+    await addDoc(collection(db, "consultations", consultationId, "messages"), {
+      text: summaryResult.summary,
+      senderId: "system",
+      senderName: "AI Assistant",
+      timestamp: serverTimestamp(),
+      isSystemMessage: true,
+      isAiSummary: true,
+    });
 
-    // Clean up
+    showNotification(
+      summaryResult.usedFallback
+        ? "✓ Konsultasi selesai (ringkasan manual)"
+        : "✓ Konsultasi selesai dengan ringkasan AI!",
+      "success"
+    );
+
+    // Cleanup
     if (messagesUnsubscribe) {
       messagesUnsubscribe();
       messagesUnsubscribe = null;
@@ -1237,22 +1304,105 @@ async function finishConsultationFromChat(consultationId) {
 
     currentConsultationId = null;
 
-    // Navigate back to dashboard
+    // Navigate back
     if (currentUserData.role === "admin") {
       showSection("adminDashboard");
       loadAdminDashboard();
-    } else {
-      showSection("patientDashboard");
     }
 
-    console.log("✓ Consultation finished:", consultationId);
+    console.log("✓ Consultation finished with AI summary");
   } catch (error) {
     console.error("✗ Finish consultation error:", error);
-    showNotification("Gagal menyelesaikan konsultasi", "error");
+    showNotification("Gagal: " + error.message, "error");
   }
 
   hideLoading();
 }
+
+// ========================================
+// AI SUMMARY ACTIONS
+// ========================================
+
+window.downloadAiSummaryPDF = async function (messageId) {
+  if (!currentConsultationId) return;
+
+  try {
+    showLoading("Membuat PDF...");
+
+    const consultationDoc = await getDoc(
+      doc(db, "consultations", currentConsultationId)
+    );
+    const consultationData = consultationDoc.data();
+
+    const summaryData = {
+      summary: consultationData.aiSummary || "Ringkasan tidak tersedia",
+      generatedAt:
+        consultationData.aiSummaryGeneratedAt || new Date().toISOString(),
+      usedFallback: consultationData.aiSummaryUsedFallback || false,
+    };
+
+    const consultationInfo = {
+      patientName: consultationData.patientName || "Pasien",
+      date: consultationData.finishedAt?.toDate() || new Date(),
+      type: consultationData.serviceType || "chat",
+    };
+
+    const result = await exportSummaryToPDF(summaryData, consultationInfo);
+
+    if (result.success) {
+      showNotification(`PDF berhasil: ${result.filename}`, "success");
+    }
+  } catch (error) {
+    console.error("Download PDF error:", error);
+    showNotification("Gagal membuat PDF: " + error.message, "error");
+  } finally {
+    hideLoading();
+  }
+};
+
+window.copyAiSummary = async function (messageId) {
+  try {
+    const messageElement = document.querySelector(
+      `[data-message-id="${messageId}"]`
+    );
+    if (!messageElement) {
+      console.error("Message element not found:", messageId);
+      showNotification("Elemen tidak ditemukan", "error");
+      return;
+    }
+
+    const summaryContent = messageElement.querySelector(".ai-summary-content");
+    if (!summaryContent) {
+      console.error("Summary content not found");
+      showNotification("Konten ringkasan tidak ditemukan", "error");
+      return;
+    }
+
+    // Get text content (strip HTML)
+    const summaryText = summaryContent.innerText || summaryContent.textContent;
+
+    await navigator.clipboard.writeText(summaryText);
+    showNotification("✓ Ringkasan berhasil disalin!", "success");
+  } catch (error) {
+    console.error("Copy error:", error);
+
+    // Fallback: show alert with text
+    const messageElement = document.querySelector(
+      `[data-message-id="${messageId}"]`
+    );
+    if (messageElement) {
+      const summaryContent = messageElement.querySelector(
+        ".ai-summary-content"
+      );
+      if (summaryContent) {
+        const text = summaryContent.innerText || summaryContent.textContent;
+        prompt("Salin teks berikut:", text);
+      }
+    }
+
+    showNotification("Gagal menyalin. Gunakan Ctrl+C manual.", "warning");
+  }
+};
 
 // Utility: Escape HTML
 function escapeHtml(text) {
