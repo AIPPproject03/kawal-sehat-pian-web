@@ -28,17 +28,18 @@ import toast from "./toast.js";
 import {
   generateConsultationSummary,
   exportSummaryToPDF,
-} from "./gemini-config.js"; // ✅ ADD THIS
+} from "./gemini-config.js";
+import { CONFIG } from "./config.js"; // ✅ ADD THIS
 
 // Firebase Configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyA00JIvQxqKIkTI_9w14_NRgHZMunFked8",
-  authDomain: "kawal-sehat-pian.firebaseapp.com",
-  projectId: "kawal-sehat-pian",
-  storageBucket: "kawal-sehat-pian.firebasestorage.app",
-  messagingSenderId: "691975475378",
-  appId: "1:691975475378:web:5fc357ef751aa993f679ab",
-  measurementId: "G-ZQC0V56E04",
+  apiKey: CONFIG.FIREBASE_API_KEY,
+  authDomain: CONFIG.FIREBASE_AUTH_DOMAIN,
+  projectId: CONFIG.FIREBASE_PROJECT_ID,
+  storageBucket: CONFIG.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: CONFIG.FIREBASE_MESSAGING_SENDER_ID,
+  appId: CONFIG.FIREBASE_APP_ID,
+  measurementId: CONFIG.FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase

@@ -1,12 +1,18 @@
+// Import API keys from separate config file
+import { CONFIG } from "./config.js";
+
 // ========================================
 // GOOGLE GEMINI AI CONFIGURATION
 // ========================================
 
-export const GEMINI_API_KEY = "AIzaSyDvfTYuwtBcIVaHzgeJvBdoS2pLJrzSEAY";
-
-// ✅ Use gemini-pro (stable and verified)
+export const GEMINI_API_KEY = CONFIG.GEMINI_API_KEY;
 export const GEMINI_API_URL =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+
+// Validation
+if (!GEMINI_API_KEY || GEMINI_API_KEY === "YOUR_GEMINI_API_KEY_HERE") {
+  console.error("⚠️ GEMINI_API_KEY not configured! Check src/js/config.js");
+}
 
 // ========================================
 // GENERATE AI SUMMARY
@@ -18,7 +24,6 @@ export async function generateConsultationSummary(
   consultationType
 ) {
   try {
-    // Filter messages
     const chatHistory = messages
       .filter((msg) => !msg.isSystemMessage && msg.text)
       .map((msg) => `${msg.senderName}: ${msg.text}`)
@@ -33,7 +38,6 @@ export async function generateConsultationSummary(
       };
     }
 
-    // Create prompt
     const prompt = `Kamu adalah asisten medis yang membantu merangkum konsultasi kesehatan.
 
 INFORMASI KONSULTASI:
@@ -62,18 +66,13 @@ Buatkan ringkasan dalam format berikut (gunakan teks biasa):
 
 Gunakan bahasa Indonesia yang mudah dipahami. Buat ringkasan maksimal 250 kata.`;
 
-    console.log("📡 Calling Gemini API (gemini-pro)...");
+    console.log("📡 Calling Gemini API...");
 
-    // Call Gemini API
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: prompt }],
-          },
-        ],
+        contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
           temperature: 0.7,
           topK: 40,
@@ -148,7 +147,6 @@ function createFallbackSummary(messages, patientName, consultationType) {
     );
   }
 
-  // Extract keluhan dari pesan pertama pasien
   const patientMessages = chatMessages.filter(
     (msg) => msg.senderName === patientName
   );
@@ -187,7 +185,7 @@ function createFallbackSummary(messages, patientName, consultationType) {
 }
 
 // ========================================
-// EXPORT TO PDF WITH PROPER FONT
+// EXPORT TO PDF
 // ========================================
 
 export async function exportSummaryToPDF(summaryData, consultationInfo) {
@@ -213,7 +211,6 @@ export async function exportSummaryToPDF(summaryData, consultationInfo) {
           align: "center",
         });
 
-        // Line
         doc.setLineWidth(0.5);
         doc.setDrawColor(74, 144, 226);
         doc.line(20, 27, 190, 27);
@@ -225,11 +222,7 @@ export async function exportSummaryToPDF(summaryData, consultationInfo) {
         doc.text(
           `Tanggal: ${new Date(consultationInfo.date).toLocaleDateString(
             "id-ID",
-            {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            }
+            { day: "numeric", month: "long", year: "numeric" }
           )}`,
           20,
           41
@@ -246,7 +239,7 @@ export async function exportSummaryToPDF(summaryData, consultationInfo) {
         doc.setDrawColor(200, 200, 200);
         doc.line(20, 51, 190, 51);
 
-        // Summary Content
+        // Summary
         doc.setFontSize(9);
         doc.setTextColor(0, 0, 0);
 
@@ -258,7 +251,6 @@ export async function exportSummaryToPDF(summaryData, consultationInfo) {
             doc.addPage();
             yPosition = 20;
           }
-
           doc.text(line, 20, yPosition);
           yPosition += 5;
         });

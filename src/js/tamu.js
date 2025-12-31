@@ -25,19 +25,20 @@ import {
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
 import toast from "./toast.js";
+import { exportSummaryToPDF } from "./gemini-config.js";
+import { CONFIG } from "./config.js"; // ✅ ADD THIS
 
-// ========================================
-// FIREBASE CONFIG
-// ========================================
+// Firebase Configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyA00JIvQxqKIkTI_9w14_NRgHZMunFked8",
-  authDomain: "kawal-sehat-pian.firebaseapp.com",
-  projectId: "kawal-sehat-pian",
-  storageBucket: "kawal-sehat-pian.firebasestorage.app",
-  messagingSenderId: "691975475378",
-  appId: "1:691975475378:web:5fc357ef751aa993f679ab",
-  measurementId: "G-ZQC0V56E04",
+  apiKey: CONFIG.FIREBASE_API_KEY,
+  authDomain: CONFIG.FIREBASE_AUTH_DOMAIN,
+  projectId: CONFIG.FIREBASE_PROJECT_ID,
+  storageBucket: CONFIG.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: CONFIG.FIREBASE_MESSAGING_SENDER_ID,
+  appId: CONFIG.FIREBASE_APP_ID,
+  measurementId: CONFIG.FIREBASE_MEASUREMENT_ID,
 };
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -564,11 +565,12 @@ function openChatRoom(consultationId) {
   loadMessages(consultationId);
 }
 
+// Load Messages - REAL-TIME
 function loadMessages(consultationId) {
   const messagesContainer = document.getElementById("messages-container");
   if (!messagesContainer) return;
 
-  messagesContainer.innerHTML = "<p>Memuat pesan...</p>";
+  messagesContainer.innerHTML = '<p class="empty-state">Memuat pesan...</p>';
 
   if (messagesUnsubscribe) {
     messagesUnsubscribe();
@@ -579,31 +581,76 @@ function loadMessages(consultationId) {
     orderBy("timestamp", "asc")
   );
 
-  messagesUnsubscribe = onSnapshot(q, (snapshot) => {
-    messagesContainer.innerHTML = "";
+  messagesUnsubscribe = onSnapshot(
+    q,
+    (snapshot) => {
+      messagesContainer.innerHTML = "";
 
-    if (snapshot.empty) {
-      messagesContainer.innerHTML =
-        '<p class="empty-state">Belum ada pesan. Mulai percakapan!</p>';
-      return;
+      if (snapshot.empty) {
+        messagesContainer.innerHTML =
+          '<p class="empty-state">💬 Belum ada pesan. Mulai percakapan!</p>';
+        return;
+      }
+
+      snapshot.forEach((doc) => {
+        const message = doc.data();
+        const messageElement = createMessageElement(message, doc.id); // ✅ Pass doc.id
+        messagesContainer.appendChild(messageElement);
+      });
+
+      setTimeout(() => {
+        messagesContainer.scrollTo({
+          top: messagesContainer.scrollHeight,
+          behavior: "smooth",
+        });
+      }, 100);
+    },
+    (error) => {
+      console.error("Load messages error:", error);
+      messagesContainer.innerHTML = '<p class="error">Gagal memuat pesan</p>';
     }
-
-    snapshot.forEach((doc) => {
-      const message = doc.data();
-      const messageElement = createMessageElement(message);
-      messagesContainer.appendChild(messageElement);
-    });
-
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-  });
+  );
 }
 
-function createMessageElement(message) {
+// Create Message Element - WITH AI SUMMARY SUPPORT
+function createMessageElement(message, messageId) {
   const div = document.createElement("div");
-  const isOwnMessage = message.senderId === currentUser.uid;
-  const isSystemMessage = message.isSystemMessage;
+  div.style.animation = "slideIn 0.3s ease";
+  div.dataset.messageId = messageId;
 
-  if (isSystemMessage) {
+  // ✅ AI Summary Message (Special Style)
+  if (message.isAiSummary) {
+    div.className = "message message-system ai-summary-message";
+    div.innerHTML = `
+      <div class="ai-summary-header">
+        <span class="ai-icon">🤖</span>
+        <h4>Ringkasan Konsultasi (AI)</h4>
+      </div>
+      <div class="message-text ai-summary-content">${escapeHtml(message.text)
+        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+        .replace(/\n/g, "<br>")}</div>
+      <div class="ai-summary-actions">
+        <button class="btn-download-summary" onclick="downloadAiSummaryPDF('${messageId}')">
+          <span>📄</span> Download PDF
+        </button>
+        <button class="btn-copy-summary" onclick="copyAiSummary('${messageId}')">
+          <span>📋</span> Salin Teks
+        </button>
+      </div>
+      <span class="message-time">${
+        message.timestamp
+          ? new Date(message.timestamp.toDate()).toLocaleTimeString("id-ID", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : ""
+      }</span>
+    `;
+    return div;
+  }
+
+  // System message
+  if (message.isSystemMessage) {
     div.className = "message message-system";
     div.innerHTML = `
       <div class="message-text system-message">${escapeHtml(message.text)}</div>
@@ -619,13 +666,15 @@ function createMessageElement(message) {
     return div;
   }
 
+  // Regular message (existing code...)
+  const isOwnMessage = currentUser && message.senderId === currentUser.uid;
   div.className = `message ${isOwnMessage ? "message-own" : "message-other"}`;
 
   const imageHtml = message.imageUrl
     ? `
     <div class="message-image-container">
       <img src="${message.imageUrl}" 
-           alt="Gambar" 
+           alt="Image" 
            class="message-image" 
            onclick="openImageModal('${message.imageUrl}')"
            loading="lazy"
@@ -636,7 +685,7 @@ function createMessageElement(message) {
 
   div.innerHTML = `
     <div class="message-header">
-      <strong>${message.senderName || "User"}</strong>
+      <strong>${message.senderName || "Tamu"}</strong>
       <span class="message-time">${
         message.timestamp
           ? new Date(message.timestamp.toDate()).toLocaleTimeString("id-ID", {
@@ -1377,5 +1426,89 @@ function initiateWhatsAppCall(consultationId, guestName) {
 
   console.log("✓ WhatsApp call initiated:", consultationId);
 }
+
+// ========================================
+// AI SUMMARY ACTIONS (TAMU)
+// ========================================
+
+window.downloadAiSummaryPDF = async function (messageId) {
+  if (!currentConsultationId) return;
+
+  try {
+    showLoading("Membuat PDF...");
+
+    const consultationDoc = await getDoc(
+      doc(db, "consultations", currentConsultationId)
+    );
+    const consultationData = consultationDoc.data();
+
+    const summaryData = {
+      summary: consultationData.aiSummary || "Ringkasan tidak tersedia",
+      generatedAt:
+        consultationData.aiSummaryGeneratedAt || new Date().toISOString(),
+      usedFallback: consultationData.aiSummaryUsedFallback || false,
+    };
+
+    const consultationInfo = {
+      patientName: consultationData.patientName || "Tamu",
+      date: consultationData.finishedAt?.toDate() || new Date(),
+      type: consultationData.serviceType || "chat",
+    };
+
+    const result = await exportSummaryToPDF(summaryData, consultationInfo);
+
+    if (result.success) {
+      showNotification(`✓ PDF berhasil diunduh: ${result.filename}`, "success");
+    }
+  } catch (error) {
+    console.error("Download PDF error:", error);
+    showNotification("Gagal membuat PDF: " + error.message, "error");
+  } finally {
+    hideLoading();
+  }
+};
+
+window.copyAiSummary = async function (messageId) {
+  try {
+    const messageElement = document.querySelector(
+      `[data-message-id="${messageId}"]`
+    );
+    if (!messageElement) {
+      console.error("Message element not found:", messageId);
+      showNotification("Elemen tidak ditemukan", "error");
+      return;
+    }
+
+    const summaryContent = messageElement.querySelector(".ai-summary-content");
+    if (!summaryContent) {
+      console.error("Summary content not found");
+      showNotification("Konten ringkasan tidak ditemukan", "error");
+      return;
+    }
+
+    const summaryText = summaryContent.innerText || summaryContent.textContent;
+
+    await navigator.clipboard.writeText(summaryText);
+    showNotification("✓ Ringkasan berhasil disalin!", "success");
+  } catch (error) {
+    console.error("Copy error:", error);
+
+    // Fallback: show prompt
+    const messageElement = document.querySelector(
+      `[data-message-id="${messageId}"]`
+    );
+    if (messageElement) {
+      const summaryContent = messageElement.querySelector(
+        ".ai-summary-content"
+      );
+      if (summaryContent) {
+        const text = summaryContent.innerText || summaryContent.textContent;
+        prompt("Salin teks berikut:", text);
+      }
+    }
+
+    showNotification("Gagal menyalin. Gunakan Ctrl+C manual.", "warning");
+  }
+};
 
 console.log("✓ Tamu app initialized");

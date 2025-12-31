@@ -1,37 +1,62 @@
-# Dependencies
+# ========================================
+# API KEYS & SECRETS
+# ========================================
+.env
+.env.local
+.env.production
+*.key
+*.pem
+secrets/
+
+# ✅ GITIGNORE config.js (CONTAINS SECRETS!)
+src/js/config.js
+
+# ========================================
+# BUILD & DEPLOYMENT
+# ========================================
+dist/
+build/
+.netlify/
+.vercel/
+
+# ========================================
+# NODE MODULES
+# ========================================
 node_modules/
 
-# IDE
+# ========================================
+# OS FILES
+# ========================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ========================================
+# IDE & EDITOR
+# ========================================
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
+# ========================================
+# LOGS
+# ========================================
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Environment variables (if used in future)
-.env
-.env.local
+# ========================================
+# TEMP FILES
+# ========================================
+*.tmp
+*.temp
+.cache/
 
-# Build outputs
-dist/
-build/
-
-# Temporary files
-tmp/
-temp/
-
-# Others
-SETUP.md
-QUICKSTART.md
-CHANGES.md
-netlify.toml
+# ========================================
+# TEST FILES
+# ========================================
 test-gemini.html
 test-models.html
