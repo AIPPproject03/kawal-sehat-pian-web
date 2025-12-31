@@ -272,11 +272,56 @@ if (paymentProofInput) {
       paymentProofInput.dataset.processedFile = await fileToBase64(
         processedFile
       );
+
+      console.log("✓ Image processed and preview shown");
     } catch (error) {
       console.error("Error processing image:", error);
       showNotification("Gagal memproses gambar", "error");
       this.value = "";
     }
+  });
+}
+
+// ✅ FIX: Remove Preview Button
+const removePreviewBtn = document.getElementById("remove-preview");
+if (removePreviewBtn) {
+  removePreviewBtn.addEventListener("click", function (e) {
+    e.preventDefault(); // Prevent any default action
+    e.stopPropagation(); // Stop event bubbling
+
+    console.log("Remove preview clicked");
+
+    const previewContainer = document.getElementById("preview-container");
+    const uploadLabel = document.querySelector(".file-upload-label");
+    const paymentProof = document.getElementById("payment-proof");
+    const previewImage = document.getElementById("preview-image");
+
+    // Hide preview
+    if (previewContainer) {
+      previewContainer.style.display = "none";
+      console.log("✓ Preview container hidden");
+    }
+
+    // Show upload label
+    if (uploadLabel) {
+      uploadLabel.style.display = "flex";
+      console.log("✓ Upload label shown");
+    }
+
+    // Clear file input
+    if (paymentProof) {
+      paymentProof.value = "";
+      delete paymentProof.dataset.processedFile;
+      console.log("✓ File input cleared");
+    }
+
+    // Clear preview image
+    if (previewImage) {
+      previewImage.src = "";
+      console.log("✓ Preview image cleared");
+    }
+
+    showNotification("Foto dihapus. Silakan pilih foto baru.", "info");
   });
 }
 
