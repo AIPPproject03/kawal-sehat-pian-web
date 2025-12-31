@@ -1321,6 +1321,128 @@ async function finishConsultationFromChat(consultationId) {
 }
 
 // ========================================
+// FINISH CONSULTATION FROM CARD (SIMPLE - NO AI FOR PHONE)
+// ========================================
+
+async function finishConsultationFromCard(consultationId) {
+  if (!confirm("✓ Selesaikan konsultasi ini?")) return;
+
+  showLoading("Menyelesaikan konsultasi...");
+
+  try {
+    console.log("Finishing consultation from card:", consultationId);
+
+    // 1. Get consultation data
+    const consultationDoc = await getDoc(
+      doc(db, "consultations", consultationId)
+    );
+
+    if (!consultationDoc.exists()) {
+      throw new Error("Konsultasi tidak ditemukan");
+    }
+
+    const consultationData = consultationDoc.data();
+
+    // 2. Check consultation type
+    if (consultationData.serviceType === "phone") {
+      // PHONE: Simple finish without AI
+      const duration = consultationData.approvedAt
+        ? Math.round(
+            (Date.now() - consultationData.approvedAt.toDate().getTime()) /
+              60000
+          )
+        : 0;
+
+      const phoneSummary = createPhoneSummary(
+        consultationData.patientName || "Pasien",
+        consultationData.createdAt?.toDate() || new Date(),
+        duration
+      );
+
+      // Update consultation
+      await updateDoc(doc(db, "consultations", consultationId), {
+        status: "finished",
+        finishedAt: serverTimestamp(),
+        finishedBy: currentUser.uid,
+        aiSummary: phoneSummary,
+        aiSummaryGeneratedAt: new Date().toISOString(),
+        consultationType: "phone",
+      });
+
+      // ✅ Send system message (completion)
+      await addDoc(
+        collection(db, "consultations", consultationId, "messages"),
+        {
+          text: "✅ Konsultasi telepon telah selesai. Terima kasih! 🙏",
+          senderId: "system",
+          senderName: "Sistem",
+          timestamp: serverTimestamp(),
+          isSystemMessage: true,
+        }
+      );
+
+      // ✅ NEW: Send summary message with isAiSummary flag
+      await addDoc(
+        collection(db, "consultations", consultationId, "messages"),
+        {
+          text: phoneSummary,
+          senderId: "system",
+          senderName: "Ringkasan Konsultasi",
+          timestamp: serverTimestamp(),
+          isSystemMessage: true,
+          isAiSummary: true, // ✅ IMPORTANT: This makes it render as AI summary!
+        }
+      );
+
+      showNotification(
+        "✓ Konsultasi telepon berhasil diselesaikan!",
+        "success"
+      );
+      console.log("✓ Phone consultation finished:", consultationId);
+    } else {
+      // CHAT: Use AI summary (call existing function)
+      await finishConsultationFromChat(consultationId);
+      return; // Exit early, finishConsultationFromChat will handle the rest
+    }
+
+    // 3. Reload dashboard (only for phone, chat handled by finishConsultationFromChat)
+    if (currentUserData.role === "admin") {
+      showSection("adminDashboard");
+      loadAdminDashboard();
+    }
+  } catch (error) {
+    console.error("✗ Finish consultation error:", error);
+    showNotification("Gagal menyelesaikan: " + error.message, "error");
+  }
+
+  hideLoading();
+}
+
+// ========================================
+// CREATE PHONE SUMMARY (SIMPLE TEMPLATE)
+// ========================================
+
+function createPhoneSummary(patientName, createdDate, duration) {
+  return (
+    `📞 RINGKASAN KONSULTASI TELEPON\n\n` +
+    `Pasien: ${patientName}\n` +
+    `Tanggal: ${createdDate.toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    })}\n` +
+    `Durasi: ±${duration} menit\n\n` +
+    `Konsultasi dilakukan melalui telepon/panggilan suara via WhatsApp.\n\n` +
+    `CATATAN:\n` +
+    `• Konsultasi telepon telah selesai\n` +
+    `• Detail percakapan tidak dicatat\n` +
+    `• Jika ada keluhan lebih lanjut, segera hubungi kembali\n\n` +
+    `Terima kasih telah menggunakan layanan Kawal Sehat Pian.\n` +
+    `Semoga sehat selalu! 🙏`
+  );
+}
+
+// ========================================
 // AI SUMMARY ACTIONS
 // ========================================
 
