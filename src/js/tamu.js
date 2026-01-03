@@ -27,6 +27,7 @@ import {
 import toast from "./toast.js";
 import { exportSummaryToPDF } from "./gemini-config.js";
 import { CONFIG } from "./config.js"; // ✅ ADD THIS
+import { initEmailJS, sendNewConsultationEmail } from "./email-config.js";
 
 // Firebase Configuration
 const firebaseConfig = {
@@ -42,6 +43,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+// Initialize EmailJS
+window.addEventListener("DOMContentLoaded", () => {
+  initEmailJS();
+});
 
 // ========================================
 // GLOBAL STATE
@@ -325,7 +331,7 @@ if (removePreviewBtn) {
   });
 }
 
-// Upload Proof Form Submit
+// Upload Proof Form Submit - WITH EMAIL
 const uploadProofForm = document.getElementById("upload-proof-form");
 if (uploadProofForm) {
   uploadProofForm.addEventListener("submit", async (e) => {
@@ -377,7 +383,7 @@ if (uploadProofForm) {
       // Create consultation
       const consultationRef = await addDoc(collection(db, "consultations"), {
         patientId: currentUser.uid,
-        patientName: currentUserData?.name || "Tamu",
+        patientName: "Tamu",
         serviceType: selectedService,
         price: selectedPrice,
         status: "pending",
@@ -387,6 +393,18 @@ if (uploadProofForm) {
         guestSession: currentUser.uid,
         createdAt: serverTimestamp(),
       });
+
+      // ✅ Send Email Notification to Admin
+      try {
+        await sendNewConsultationEmail({
+          patientName: "Tamu",
+          serviceType: selectedService,
+          price: selectedPrice,
+        });
+        console.log("✓ Email notification sent to admin (guest)");
+      } catch (emailError) {
+        console.error("✗ Email notification failed:", emailError);
+      }
 
       // Mark that consultation was created (preserve user data)
       hasCreatedConsultation = true;

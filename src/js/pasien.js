@@ -27,6 +27,7 @@ import {
 import toast from "./toast.js";
 import { exportSummaryToPDF } from "./gemini-config.js";
 import { CONFIG } from "./config.js"; // ✅ ADD THIS
+import { initEmailJS, sendNewConsultationEmail } from "./email-config.js";
 
 // Firebase Configuration
 const firebaseConfig = {
@@ -43,6 +44,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+// Initialize EmailJS
+window.addEventListener("DOMContentLoaded", () => {
+  initEmailJS();
+});
 
 // Global State
 let currentUser = null;
@@ -306,7 +312,7 @@ if (removePreviewBtn) {
   });
 }
 
-// Upload Proof Form Submit - FIXED
+// Upload Proof Form Submit - WITH EMAIL
 const uploadProofForm = document.getElementById("upload-proof-form");
 if (uploadProofForm) {
   uploadProofForm.addEventListener("submit", async (e) => {
@@ -322,10 +328,8 @@ if (uploadProofForm) {
     }
 
     try {
-      // Use already processed file from dataset
       let paymentProofBase64 = paymentProofInput.dataset.processedFile;
 
-      // If not processed yet (shouldn't happen), process now
       if (!paymentProofBase64) {
         const file = paymentProofInput.files[0];
         let processedFile = file;
@@ -349,6 +353,18 @@ if (uploadProofForm) {
         paymentProofType: "image/jpeg",
         createdAt: serverTimestamp(),
       });
+
+      // ✅ Send Email Notification to Admin
+      try {
+        await sendNewConsultationEmail({
+          patientName: currentUserData.name || "Pasien",
+          serviceType: selectedService,
+          price: selectedPrice,
+        });
+        console.log("✓ Email notification sent to admin");
+      } catch (emailError) {
+        console.error("✗ Email notification failed:", emailError);
+      }
 
       // Success - Close modal and reset form
       const modal = document.getElementById("payment-modal");

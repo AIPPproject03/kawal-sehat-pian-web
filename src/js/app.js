@@ -30,6 +30,7 @@ import {
   exportSummaryToPDF,
 } from "./gemini-config.js";
 import { CONFIG } from "./config.js"; // ✅ ADD THIS
+import { initEmailJS, sendNewConsultationEmail } from "./email-config.js";
 
 // Firebase Configuration
 const firebaseConfig = {
@@ -389,12 +390,13 @@ if (uploadProofForm) {
     const file = paymentProofFile.files[0];
 
     try {
-      // Compress image if larger than 1MB
       let processedFile = file;
 
-      if (file.size > 1024 * 1024) {
+      // ✅ ALWAYS compress, target 800KB (buffer for base64 overhead)
+      if (file.size > 500 * 1024) {
+        // If > 500KB
         showNotification("🔄 Mengompres gambar...", "info");
-        processedFile = await compressImage(file, 0.9); // Target < 1MB
+        processedFile = await compressImage(file, 0.8, 1280); // 800KB, 1280px max
         console.log(
           `Original: ${(file.size / 1024).toFixed(2)} KB → Compressed: ${(
             processedFile.size / 1024
@@ -402,10 +404,22 @@ if (uploadProofForm) {
         );
       }
 
-      // Convert to base64
+      // ✅ Final validation
+      if (processedFile.size > 850 * 1024) {
+        throw new Error(
+          "Gambar masih terlalu besar setelah kompresi. Gunakan gambar lain."
+        );
+      }
+
       const paymentProofBase64 = await fileToBase64(processedFile);
 
-      await addDoc(collection(db, "consultations"), {
+      // ✅ Check base64 size
+      if (paymentProofBase64.length > 1000000) {
+        // ~1MB base64
+        throw new Error("Ukuran file terlalu besar. Maksimal 800KB.");
+      }
+
+      const docRef = await addDoc(collection(db, "consultations"), {
         patientId: currentUser.uid,
         patientName: currentUserData.name || "Tamu",
         serviceType: selectedService,
@@ -415,6 +429,18 @@ if (uploadProofForm) {
         paymentProofType: processedFile.type,
         createdAt: serverTimestamp(),
       });
+
+      // ✅ Send Email Notification to Admin
+      try {
+        await sendNewConsultationEmail({
+          patientName: currentUserData.name || "Tamu",
+          serviceType: selectedService,
+          price: selectedPrice,
+        });
+        console.log("✓ Email notification sent to admin");
+      } catch (emailError) {
+        console.error("✗ Email notification failed:", emailError);
+      }
 
       showNotification(
         "Permintaan konsultasi berhasil diajukan! Menunggu persetujuan admin.",
@@ -441,7 +467,7 @@ if (uploadProofForm) {
     } catch (error) {
       console.error("Upload proof error:", error);
       showNotification(
-        "Gagal mengupload bukti pembayaran: " + error.message,
+        error.message || "Gagal mengupload bukti pembayaran",
         "error"
       );
     }
@@ -2314,7 +2340,7 @@ if (messageInput) {
 // ========================================
 
 // Compress image to target size (default 1MB)
-async function compressImage(file, maxSizeMB = 1, maxWidthOrHeight = 1920) {
+async function compressImage(file, maxSizeMB = 0.8, maxWidthOrHeight = 1280) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
@@ -2346,7 +2372,7 @@ async function compressImage(file, maxSizeMB = 1, maxWidthOrHeight = 1920) {
         ctx.drawImage(img, 0, 0, width, height);
 
         // Try different quality levels to get under maxSizeMB
-        let quality = 0.9;
+        let quality = 0.85; // Start lower
         const targetSize = maxSizeMB * 1024 * 1024;
 
         const tryCompress = (currentQuality) => {
@@ -2358,16 +2384,34 @@ async function compressImage(file, maxSizeMB = 1, maxWidthOrHeight = 1920) {
               }
 
               console.log(
-                `Compressed at quality ${currentQuality}: ${(
+                `Compressed at quality ${currentQuality.toFixed(2)}: ${(
                   blob.size / 1024
                 ).toFixed(2)} KB`
               );
 
               // If still too large and quality can be reduced further
-              if (blob.size > targetSize && currentQuality > 0.1) {
-                tryCompress(currentQuality - 0.1);
+              if (blob.size > targetSize && currentQuality > 0.3) {
+                tryCompress(currentQuality - 0.05); // Reduce in smaller steps
+              } else if (blob.size > targetSize) {
+                // If still too large, reduce dimensions
+                const newWidth = Math.floor(width * 0.9);
+                const newHeight = Math.floor(height * 0.9);
+
+                if (newWidth > 480 && newHeight > 480) {
+                  canvas.width = newWidth;
+                  canvas.height = newHeight;
+                  ctx.drawImage(img, 0, 0, newWidth, newHeight);
+                  tryCompress(0.85); // Restart with new size
+                } else {
+                  // Already at minimum size, accept current
+                  const compressedFile = new File([blob], file.name, {
+                    type: "image/jpeg",
+                    lastModified: Date.now(),
+                  });
+                  resolve(compressedFile);
+                }
               } else {
-                // Create File object from blob
+                // Success!
                 const compressedFile = new File([blob], file.name, {
                   type: "image/jpeg",
                   lastModified: Date.now(),
@@ -2408,4 +2452,11 @@ function showPhoneConsultationInfo(consultationId, patientName) {
   );
 
   console.log("✓ Phone consultation info shown:", consultationId);
+}
+
+// Initialize EmailJS after page load
+if (isIndexPage) {
+  window.addEventListener("DOMContentLoaded", () => {
+    initEmailJS();
+  });
 }

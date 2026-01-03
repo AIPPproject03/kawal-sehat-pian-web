@@ -15,4 +15,7 @@ export const CONFIG = {
   FIREBASE_MESSAGING_SENDER_ID: "123456789",
   FIREBASE_APP_ID: "1:123456789:web:abcdef123456",
   FIREBASE_MEASUREMENT_ID: "G-ABCD123456",
+  GMAIL_SERVICE_ID: "your_service_id",
+  GMAIL_TEMPLATE_ID: "your_template_id",
+  GMAIL_PUBLIC_KEY: "your_public_key",
 };
